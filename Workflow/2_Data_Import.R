@@ -16,6 +16,8 @@
 library(tximport)
 #GenomicFeatures is used to translate the gtf file into a transcript to gene mapping
 library(GenomicFeatures)
+#DESeq2 is used to combine technical replicates, and store gene, sample, and count information in a convenient object
+library(DESeq2)
 #biomaRt is used for collecting gene annotations that will be useful downstream
 library(biomaRt)
 
@@ -29,6 +31,9 @@ source("Functions/gtf_2_txmap.R")
 
 #By defining these variables at the beginning of the script, the rest can be followed through with minimal modifications
 
+##NOTE: Plan to update a subset of the Salmon files to an internal Data folder so the entire process is self-contained
+
+
 #Using location of files for Sharon et al's study as example
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109827
 #Parent directory
@@ -38,8 +43,12 @@ src <- "Sharon/Salmon_quants/"
 #Location of gtf file within parent directory {dir}
 gtf <- "Mus_musculus.GRCm39.104.gtf"
 
-#Output directory
+#Output directory for saving files
 out_dir = "/Users/lisa/Documents/Bioinformatics/6999/Results_gen/"
+
+#Pre-filtering minimum counts of gene expression: At least {min.samps} samples will have at least {min.counts} counts for the gene
+min.samps <- 2
+min.counts <- 5
 
 #For RNA-Seq data acquired from NCBI's SRA, there will be a metadata file that can be downloaded as a csv to use for sample information
 #Location of metadata for sample information
@@ -102,6 +111,16 @@ save(gene_txi, file=paste0(out_dir, "gene_txi.Rdata"))
 #To save csv of charts:
 write.csv(samples, file=paste0(out_dir, "sample_info.csv"))
 
+
+##
+# Format Data for Downstream Analyses ----
+##
+
+#NOTE: This section still in progress. Plan to include collapseReplicates, and alignment of gene_id & transcript_id for DRIMSeq
+
+gene_dds <- DESeqDataSetFromTximport(txi = gene_txi, colData = samples, design = ~1)
+keep <- rowSums(counts(gene_dds) >= min.counts) >= min.samps
+gene_dds <- gene_dds[keep,]
 
 ##
 # Other Useful Tables to Prep ----

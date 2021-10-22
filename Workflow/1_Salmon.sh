@@ -27,11 +27,11 @@ module load StdEnv/2020  gcc/9.3.0  openmpi/4.0.3 salmon/1.4.0
 
 #Create transcript index
 #Replace {fasta_file} with file location
-#Example, Danio_rerio.GRCz11.cdna.all.fa.gz
+#Example, Mus_musculus.GRCm39.cdna.all.fa.gz OR Reference/Mus_musculus.GRCm39.cdna.all.fa.gz
 #Can browse ftp site of Ensembl for species of interest
 #https://useast.ensembl.org/info/data/ftp/index.html
 #Copy link and use wget prior to running this script to transfer file
-#wget http://ftp.ensembl.org/pub/release-104/fasta/danio_rerio/cds/Danio_rerio.GRCz11.cds.all.fa.gz
+#http://ftp.ensembl.org/pub/release-104/fasta/mus_musculus/cdna/Mus_musculus.GRCm39.cdna.all.fa.gz
 
 salmon index -t {fasta_file} -i Transcript_index
 
@@ -41,6 +41,10 @@ salmon index -t {fasta_file} -i Transcript_index
 #Filenames for paired reads were identical, except R1/R2
 #Filenames used in example ended in "_R1_001.fastq.gz" and _R2_001.fastq.gz
 #Modify to suit your data's naming convention
+
+#Data used downstream in this series of example scripts are from
+#Sharon G, Cruz NJ, Kang DW, Gandal MJ et al. Human Gut Microbiota from Autism Spectrum Disorder Promote Behavioral Symptoms in Mice. Cell 2019 May 30;177(6):1600-1618.e17. PMID: 31150625
+#https://www.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA432094&o=acc_s%3Aa
 
 #Flags chosen & description from the documentation:
 #https://salmon.readthedocs.io/en/latest/
