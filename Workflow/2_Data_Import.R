@@ -3,7 +3,7 @@
 ##
 
 #Data required for this script:
-##   > salmon quantifications, at gene and transcript level identification
+##   > salmon quantifications at transcript level identification
 ##   > absolute path to quantifications
 ##   > dataframe of Transcript to Gene mappings OR GTF file corresponding to organism
 ##   > dataframe of sample information, including groups of interest such as batch and condition
@@ -16,8 +16,6 @@
 library(tximport)
 #GenomicFeatures is used to translate the gtf file into a transcript to gene mapping
 library(GenomicFeatures)
-#DESeq2 is used to combine technical replicates, and store gene, sample, and count information in a convenient object
-library(DESeq2)
 #biomaRt is used for collecting gene annotations that will be useful downstream
 library(biomaRt)
 
@@ -37,22 +35,21 @@ source("Functions/gtf_2_txmap.R")
 #Using location of files for Sharon et al's study as example
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109827
 #Parent directory
-dir <-"/Users/lisa/Documents/Bioinformatics/6999/Data/"
-#Subdirectory with Salmon count files. Only count files intended for import should be in this folder
-src <- "Sharon/Salmon_quants/"
+dir <- paste0(getwd(), "/")
+#Subdirectory with Salmon count files
+src <- "Data/"
 #Location of gtf file within parent directory {dir}
+#NOTE: this is a large file, and is thus not included in the repository. It can be downloaded from Ensembl's ftp site. As an alternative, the resulting transcript to gene mapping is saved within the Output directory.
+#http://ftp.ensembl.org/pub/release-104/gtf/mus_musculus/Mus_musculus.GRCm39.104.gtf.gz
 gtf <- "Mus_musculus.GRCm39.104.gtf"
 
 #Output directory for saving files
-out_dir = "/Users/lisa/Documents/Bioinformatics/6999/Results_gen/"
+out_dir = paste0(getwd(),"/Output/")
 
-#Pre-filtering minimum counts of gene expression: At least {min.samps} samples will have at least {min.counts} counts for the gene
-min.samps <- 2
-min.counts <- 5
 
 #For RNA-Seq data acquired from NCBI's SRA, there will be a metadata file that can be downloaded as a csv to use for sample information
 #Location of metadata for sample information
-metadata <- "Sharon/Sharon_SraRunTable.txt"
+metadata <- "Data/Sharon_SraRunTable.txt"
 
 #If preparing annotation tables through biomaRt, specify organism's gene ensembl
 org_ens <- "mmusculus_gene_ensembl"
@@ -64,41 +61,41 @@ org_ens <- "mmusculus_gene_ensembl"
 # Basic Import ----
 ##
 
-#Set up sample information
-
-# Use metatdata table downloaded from SRA
-samples <- read.csv(paste0(dir, metadata))
-#Many columns contain information not required downstream, such as the organism, or sequencing platform.
-#Check which cols have unique information to retain
-apply(samples,2,unique)
-
-#Subset table for desired info
-samples <- samples[,c(1,24,20,29,26)]
-#Define row and column names to something simple and descriptive
-rownames(samples) <- samples$Run
-colnames(samples) <- c("run", "sample", "treatment", "tissue", "group")
-
-#Clean content of cells, simplifying descriptions used
-samples[grep("Control",samples$treatment),3] <- "Control"
-samples[grep("ASD",samples$treatment),3] <- "ASD"
-samples[grep("Striatum",samples$tissue),4] <- "Striatum"
-samples[grep("cortex",samples$tissue),4] <- "PFC"
-samples$group <- gsub(" ", "_", samples$group)
-samples$group <- gsub("PrefrontalCortex", "PFC", samples$group)
-
-#Preview table
-View(samples)
-
 #Construct gene to transcript mapping
 #Be sure to include accurate organism
 txmap_mm <- gtf2txmap(dir=dir, file=gtf, organism = "Mus musculus")
 
 #Import transcripts
 #Using default of scaledTPM for counts from abundance, as recommended for downstream differential transcript usage analysis
-tx_txi_stpm <- salmon2tx(paste0(dir, src), samples$run)
+tx_txi_stpm <- salmon2tx(paste0(dir, src))
 
 #Import counts at gene-level without scaling
-gene_txi <- salmon2gene(paste0(dir, src), samples$run, tx2gene = txmap_mm)
+gene_txi <- salmon2gene(paste0(dir, src), tx2gene = txmap_mm)
+
+#Set up sample information
+
+# Use metatdata table downloaded from SRA
+samples <- read.csv(paste0(dir, metadata))
+#Subset for only runs included within repository
+samples <- samples[which(samples$Run %in% colnames(gene_txi$abundance)),]
+
+#Many columns contain information not required downstream, such as the organism, or sequencing platform.
+#Check which cols have unique information to retain
+apply(samples,2,unique)
+
+#Subset table for desired info
+samples <- samples[,c(1,24,20,26)]
+#Define row and column names to something simple and descriptive
+rownames(samples) <- samples$Run
+colnames(samples) <- c("run", "sample", "treatment", "group")
+
+#Clean content of cells, simplifying descriptions used
+samples[grep("Control",samples$treatment),3] <- "Control"
+samples[grep("ASD",samples$treatment),3] <- "ASD"
+samples$group <- gsub(" ", "_", samples$group)
+
+#Preview table
+View(samples)
 
 
 #If you want to save any files, use or modify the following:
@@ -111,16 +108,6 @@ save(gene_txi, file=paste0(out_dir, "gene_txi.Rdata"))
 #To save csv of charts:
 write.csv(samples, file=paste0(out_dir, "sample_info.csv"))
 
-
-##
-# Format Data for Downstream Analyses ----
-##
-
-#NOTE: This section still in progress. Plan to include collapseReplicates, and alignment of gene_id & transcript_id for DRIMSeq
-
-gene_dds <- DESeqDataSetFromTximport(txi = gene_txi, colData = samples, design = ~1)
-keep <- rowSums(counts(gene_dds) >= min.counts) >= min.samps
-gene_dds <- gene_dds[keep,]
 
 ##
 # Other Useful Tables to Prep ----
@@ -144,5 +131,5 @@ gene_symbols <- getBM(attributes=c('ensembl_gene_id',
                                 values=rownames(gene_txi$counts), mart=ensembl)
 
 #Save files:
-save(go_annotation, file = paste0(out_dir, "go_annotations.Rdata"))
+save(go_annotations, file = paste0(out_dir, "go_annotations.Rdata"))
 save(gene_symbols, file = paste0(out_dir, "gene_symbols.Rdata"))

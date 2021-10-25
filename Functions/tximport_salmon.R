@@ -3,16 +3,17 @@
 #ignoreTxVersion has been set to TRUE
 #dir = filepath to salmon quantification files
 #samp_names = vector of names in same order as sf files provided
-#If samp_names is not provided, file name will be used for names, with ".sf" removed
+#If samp_names is not provided, file name will be used for names, with "_quant.sf" removed, as {run}_quant.sf is the naming convention for Data in this repository.
 #tx2gene is dataframe with columns TXNAME and GENEID, as made with GenomicFeatures package
 
 #Import counts at gene level ----
 #Import done without scaling. Can be scaled later in analysis
 salmon2gene <- function(dir, samp_names, tx2gene) {
   lsf <- list.files(dir)
+  lsf <- lsf[grep("\\.sf$", lsf)]
   files <- file.path(dir, lsf)
   if (missing(samp_names)) {
-    names(files) <- gsub("\\.sf", "", lsf)
+    names(files) <- gsub("_quant\\.sf$", "", lsf)
   } else {
     names(files) <- samp_names
   }
@@ -28,9 +29,10 @@ salmon2gene <- function(dir, samp_names, tx2gene) {
 #Scaled-TPM recommended for DTU analysis
 salmon2tx <- function(dir, samp_names, cts = "scaledTPM") {
   lsf <- list.files(dir)
+  lsf <- lsf[grep("\\.sf$", lsf)]
   files <- file.path(dir, lsf)
   if (missing(samp_names)) {
-    names(files) <- gsub("\\.sf", "", lsf)
+    names(files) <- gsub("_quant\\.sf", "", lsf)
   } else {
     names(files) <- samp_names
   }

@@ -75,3 +75,4 @@ do
  fi
 done
 
+#Files included with this repository are named {run}_quant.sf
