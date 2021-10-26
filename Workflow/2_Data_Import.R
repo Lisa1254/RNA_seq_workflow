@@ -79,11 +79,19 @@ gene_txi <- salmon2gene(paste0(dir, src), tx2gene = txmap_mm)
 # Use metatdata table downloaded from SRA
 samples <- read.csv(paste0(dir, metadata))
 #Subset for only runs included within repository
+#Note, wrapper functions provided for importing information has default behaviour to use sample names derived from files that used naming convention {run}_quant.sf. The result of this is that samples are named by Run, as within the metadata table provided.
 samples <- samples[which(samples$Run %in% colnames(gene_txi$abundance)),]
 
 #Many columns contain information not required downstream, such as the organism, or sequencing platform.
-#Check which cols have unique information to retain
+#Check which cols have unique information to decide what to retain
 apply(samples,2,unique)
+
+#In this workflow example, I'll keep:
+## "Run" [,1]: unique identifiers for each run
+## "Sample.Name" [,24]: identifies same biological samples being used in multiple runs 
+## "mouse_status" [,20]: describes treatment of sample with Control or ASD identified source human fecal sample
+## "source_name" [,26]: combined factor identifying tissue (Striatum or Prefrontal cortex), treatment type (Control or ASD), and sample donor identifier (an integer used to identify which samples used which human donor)
+#In this workflow I am excluding "Tissue" [,29] because only Striatum samples have been included for the demonstration.
 
 #Subset table for desired info
 samples <- samples[,c(1,24,20,26)]
@@ -95,6 +103,7 @@ colnames(samples) <- c("run", "sample", "treatment", "group")
 samples[grep("Control",samples$treatment),3] <- "Control"
 samples[grep("ASD",samples$treatment),3] <- "ASD"
 samples$group <- gsub(" ", "_", samples$group)
+
 
 #Preview table
 View(samples)
