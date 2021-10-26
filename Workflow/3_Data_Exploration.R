@@ -25,7 +25,10 @@ library(ggplot2)
 library(sva)
 
 #Source import functions
+#Function to plot samples by principle components from DESeq data set, or to return PC loadings. 
 source("Functions/PCA_from_dds.R")
+#Functions to modify and plot count data according to batch control with Surrogate Variable Analysis
+source("Functions/SV_data_mods.R")
 
 
 ##
@@ -45,7 +48,7 @@ min.counts <- 5
 # Format Data for Downstream Analyses ----
 ##
 
-#Import gene-level counts to DESeq
+#Format gene-level counts to DESeq
 #Initializing dataset with no design specified. This will be updated prior to analysis
 gene_dds <- DESeqDataSetFromTximport(txi = gene_txi, colData = samples, design = ~1)
 #Pre-filter for very low count genes
@@ -106,3 +109,52 @@ save(tx_cts, samples, file=paste0(out_dir, "tx_ct_colRepsamp.Rdata"))
 
 
 ## 
+# Batch Correction ----
+##
+
+#If your data has known batches (e.g. multiple technicians, data collection on different dates), you can account for them in the design formula (e.g. design = ~ group + batch)
+#If batch influences are expected from the experimental design or detected in the exploratory PCA plots, but not specifically identified, the sva package can estimate surrogate variables to be used in the design
+
+#Define full model matrix of intended design
+#In this case group variable is being used rather than treatment because of the nested design - "Control" and "ASD" samples are not fully independent, so relationship between multiple inputs needs to be accounted for
+#Since there are more than 2 levels to the group factor, the full model matrix is defined without intercept by using -1
+mm.full <- model.matrix(~ -1 + group, colData(gene_dds))
+#Define null model matrix
+mm.null <- model.matrix(~ 1, colData(gene_dds))
+
+#SVA-Seq method
+#Uses normalized counts matrix:
+gene_dds <- estimateSizeFactors(gene_dds)
+norm.cts <- counts(gene_dds, normalized=TRUE) 
+
+#Construct svaseq fit
+#As the original paper used a sequence metric PC analysis to include PC1 and PC2 as batch in the design, the number of surrogate variables defined here will be 2 (n.sv=2).
+#Remove the n.sv argument to let the function determine the number of surrogate variables.
+fit.sva <- svaseq(norm.cts, mod=mm.full, mod0=mm.null, n.sv = 2)
+
+#Integrate surrogate variables to data set
+gene_dds$SV1 <- fit.sva$sv[,1]
+gene_dds$SV2 <- fit.sva$sv[,2]
+
+#Update design matrix
+design(gene_dds) <- ~ -1 + SV1 + SV2 + group
+
+## TO DO:
+## Add plot for SVs 
+## Save updated gene_dds
+
+
+
+##
+# Exploratory Plots ----
+##
+
+## Add some additional useful & common plots for exploration
+## Suggestions include: 
+##   > Scatterplot matrix
+##   > Library size before & after normalization
+##   > Heatmaps
+##   > See section 4.2 of Love's RNA-Seq workflow for examples of Mean SD plot, & 4.6 for MDS plot.
+
+
+##
