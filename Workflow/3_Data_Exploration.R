@@ -61,6 +61,11 @@ gene_dds <- gene_dds[keep,]
 PCs_plot_dds(gene_dds, color.var = "sample", shape.var = "treatment")
 
 #Technical replicates do present as nearly identical with no outliers, so the samples can be combined
+
+## If your data has no technical replicates to combine, ##
+## skip to line 79 for continuing data format ##
+
+
 #Use collapseReplicates function to combine runs of same sample:
 gene_dds <- collapseReplicates(gene_dds, groupby =  gene_dds$sample, run = gene_dds$run)
 
@@ -71,15 +76,23 @@ colData(gene_dds)
 #Looks good; will remove unnecessary "run" col in colData, since the information is more accurately contained in the new "runsCollapsed" column
 gene_dds$run <- NULL
 
+## Return to script here if no technical replicates ##
+
 #Factor "group" column of coldata for use in design 
 gene_dds$group <- factor(gene_dds$group)
 #Reference level is not necessary to set for this analysis, but can relevel to a control sample
 gene_dds$group <- relevel(gene_dds$group, "Striatum_control_1")
 
-#Combine technical replicates of transcript-level counts with same method
+#Format transcript level counts using DESeq2
 tx_dds <- DESeqDataSetFromTximport(txi = tx_txi_stpm, colData = samples, design = ~1)
+
+#If no technical replicates to combine, skip to line 95 ##
+
+#Combine technical replicates of transcript-level counts with same method
 tx_dds <- collapseReplicates(tx_dds, groupby =  tx_dds$sample, run = tx_dds$run)
 tx_dds$run <- NULL
+
+## Return here if not combining technical replicates ##
 tx_dds$group <- factor(gene_dds$group)
 tx_dds$group <- relevel(tx_dds$group, "Striatum_control_1")
 
@@ -105,7 +118,7 @@ colnames(samples)[1] <- "sample_id"
 
 ## Save files
 save(gene_dds, file=paste0(out_dir, "gene_dds.Rdata"))
-save(tx_cts, samples, file=paste0(out_dir, "tx_ct_colRepsamp.Rdata"))
+save(tx_cts, samples, file=paste0(out_dir, "tx_ct_formatted.Rdata"))
 
 
 ## 
@@ -141,7 +154,10 @@ design(gene_dds) <- ~ -1 + SV1 + SV2 + group
 
 ## TO DO:
 ## Add plot for SVs 
-## Save updated gene_dds
+
+## Save files
+#gene_dds will be used in script 4_DGE_DESeq2, and is being saved as gene_dds_sva to distinguish from the DESeq data set object saved with replicates collapsed, but no surrogate variable information.
+save(gene_dds, file=paste0(out_dir, "gene_dds_sva.Rdata"))
 
 
 
