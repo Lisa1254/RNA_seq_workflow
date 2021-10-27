@@ -31,8 +31,6 @@ source("Functions/gtf_2_txmap.R")
 
 #By defining these variables at the beginning of the script, the rest can be followed through with minimal modifications
 
-##NOTE: Plan to update a subset of the Salmon files to an internal Data folder so the entire process is self-contained
-
 
 #Using location of files for Sharon et al's study as example
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109827
