@@ -128,7 +128,7 @@ ensembl <- useDataset(org_ens, mart=useMart("ENSEMBL_MART_ENSEMBL"))
 #Prepare table of GO annotations associated with genes in dataset
 #This will be used in downstream topGO gene ontology analysis
 go_annotations <- getBM(attributes=c('go_id', 'ensembl_gene_id', 
-                                          'external_gene_name', 'namespace_1003'),
+                                          'external_gene_name', 'namespace_1003', 'name_1006'),
                              filters='ensembl_gene_id',
                              values=rownames(gene_txi$counts), mart=ensembl)
 

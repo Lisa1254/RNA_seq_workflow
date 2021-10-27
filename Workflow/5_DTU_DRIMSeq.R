@@ -97,6 +97,9 @@ test_asd.control <- dmTest(drimds, contrast = coef_asd.control, one_way = FALSE,
 res_drim_asd.control <- results(test_asd.control)
 
 sig_drim_asd.control <- res_drim_asd.control[which(res_drim_asd.control$adj_pvalue < padj_th),]
+#For convenience of downstream analysis, will use gene_id column as rownames instead
+rownames(sig_drim_asd.control) <- sig_drim_asd.control$gene_id
+sig_drim_asd.control$gene_id <- NULL
 
 #Save fit because it took a long time to make
 save(drimds, file = "Output/drimds.Rdata")
@@ -106,3 +109,19 @@ save(test_asd.control, file = "Output/test_drim_asd_control.Rdata")
 save(sig_drim_asd.control, file = "Output/sig_drim_asd_control.Rdata")
 
 ##
+# Annotations and plots ----
+##
+
+# In progress still, currently includes rough pasted code from previous scripts
+
+#Can get transcript annotations from biomaRt (pasted from metabolite rescue exploration)
+library("biomaRt")
+ensembl_dr = useDataset("drerio_gene_ensembl", mart=useMart("ENSEMBL_MART_ENSEMBL"))
+
+annot_tr1 <- getBM(attributes = c('ensembl_gene_id', 'external_gene_name', 'ensembl_transcript_id', 'transcript_length', 'external_transcript_name', 'transcript_biotype'),
+                   filters = "ensembl_gene_id",
+                   values = all_drim_mr,
+                   mart = ensembl_dr)
+
+#Can use transcript annotations and plotProportions (DRIMSeq version, or my modified code) to plot and compare transcript usage
+

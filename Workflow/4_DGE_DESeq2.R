@@ -133,3 +133,64 @@ for (con in contrasts_0) {
          res_contrast(des_0, con))
 }
 
+
+##
+# Plots & Annotations for Significant genes ----
+##
+
+#This section is in progress. Currently has rough pasted code from other scripts to properly integrate
+
+#Add here the subsetting of the original gene symbol dataframe to get gene identities
+
+#When multiple comparisons of interest, I have added a col to describe which gene belongs to which comparison using the following code as example
+#Add comparison column for relevant contrasts
+annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd.nt, "ASD-NT", NA)
+
+annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd1.nt, paste(annot_sig_drim$comparison, "ASD1-NT", sep=","), annot_sig_drim$comparison)
+
+annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd2.nt, paste(annot_sig_drim$comparison, "ASD2-NT", sep=","), annot_sig_drim$comparison)
+
+annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd1.asd2, paste(annot_sig_drim$comparison, "ASD1-ASD2", sep=","), annot_sig_drim$comparison)
+
+annot_sig_drim$comparison <- gsub("NA,", "", annot_sig_drim$comparison)
+
+#If I keep this, make it more efficient & more generally applicable
+
+#This could also be a good spot to add gene count plot, like the following code from my exploration of Victoria's metabolite rescue study:
+count.table <- function(count.data, sample.data, annot_frame) {
+  genes <- annot_frame[,1]
+  symbols <- annot_frame[,2]
+  count.frame <- data.frame(gene=rep(genes, ncol(count.data)),
+                            symbol=rep(symbols, ncol(count.data)),
+                            counts=as.vector(count.data[genes,]),
+                            sample=rep(colnames(count.data), 
+                                       each=length(genes)),
+                            group=rep(sample.data[,2], 
+                                      each=length(genes)))
+  count.frame$symbol <- factor(count.frame$symbol, levels = count.frame[1:length(genes),2])
+  return(count.frame)
+}
+annot_sub <- gene_symbol_all[which(gene_symbol_all$ensembl_gene_id %in% resc_genes_update_ens),]
+samples <- as.data.frame(colData(gene_dds_mr))
+gene_dds_mr <- estimateSizeFactors(gene_dds_mr)
+counts <- counts(gene_dds_mr, normalized=TRUE)
+
+prev_resc_table <- count.table(counts, samples, annot_sub)
+
+ggplot(prev_resc_table, mapping = aes(x=symbol, y=counts, fill=group, color=group)) +
+  geom_dotplot(binaxis = "y", stackdir = "center", binwidth = 1/30) +
+  scale_y_log10() +
+  coord_flip() +
+  labs(title = "Gene counts for previously identified rescued genes") +
+  labs(y = "Log10 normalized counts")
+
+#Could probably collect the count table function and the ggplot code into a single function to easily plot counts of selected genes
+
+
+# This is also a good place to add a volcano plot
+
+
+
+
+
+##

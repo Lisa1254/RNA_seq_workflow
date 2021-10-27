@@ -14,8 +14,10 @@ Intended final product:
 TO DO:  
 Script 2/3: Either add tx_txi_stpm object to Output save (large file), or make in-script note that the object is not included  
 Script 3: Additional exploratory plots  
-Script 4: Generalized code section for working with multiple comparisons or multiple datasets. Should I keep the required code correction for betaConverge?  
-Scripts 5-7 
+Script 4: Generalized code section for working with multiple comparisons or multiple datasets. Should I keep the required code correction for betaConverge? Also added section for annotations and plots, which needs updating  
+Script 5: Section on transcript annotations and plots needs update  
+Scripts 6 & 7 in progress  
+Currently working on fixing topGO_results_wrapper functions  
   
 For illustration and following along with the example scripts, I've used a selection of samples from the publicly available data from:  
 
