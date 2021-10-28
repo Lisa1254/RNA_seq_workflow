@@ -28,13 +28,8 @@ keep_annot <- function(sig.table, go_annot.table, up.or.down) {
 #Default statistic is fisher, with weight01 algorithm, and pvalue threshold of 0.001, but these can be changed.
 
 
-#Would like to update Term fix to get term from go_annotation table made in script 2
-
-#Remove these imports after fixing function
-#library(GO.db)
-#goterms <- Term(GOTERM)
-
-GO_2_results <- function(sig_genes, bg.genes, ont, gene2go, thresh_p=0.001, algorithm="weight01", statistic="fisher", terms_full) {
+GO_2_results <- function(sig_genes, bg.genes, ont, go_annots, thresh_p=0.001, algorithm="weight01", statistic="fisher") {
+  gene2go <- unstack(go_annots[,c(1,2)])
   geneList <- factor(as.integer(bg.genes %in% sig_genes))
   names(geneList) <- bg.genes
   keep_res <- data.frame()
@@ -70,7 +65,8 @@ GO_2_results <- function(sig_genes, bg.genes, ont, gene2go, thresh_p=0.001, algo
   }
   for (row in 1:length(keep_res$Term)) {
     if (grepl("\\.\\.\\.", keep_res$Term[row])) {
-      keep_res$Term[row] <- goterms[keep_res$GO.ID[row]]
+      full.term <- go_annots[which(go_annots$go_id == keep_res[row,2]),"name_1006"]
+      keep_res$Term[row] <- full.term[1]
     }
   }
   return(keep_res)
