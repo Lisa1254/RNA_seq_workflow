@@ -8,6 +8,8 @@ load("Output/sig_deg_asd_control.Rdata")
 load("Output/sig_drim_asd_control.Rdata")
 ##   > Gene to GO mappings (Script 2)
 load("Output/go_annotations.Rdata")
+##   > Gene symbol mappings used in plots (Script 2)
+load("Output/gene_symbols.Rdata")
 
 
 ##
@@ -16,9 +18,15 @@ load("Output/go_annotations.Rdata")
 
 #Functional enrichment analysis of gene ontology done with topGO
 library(topGO)
+#Plot of enriched GO terms and genes done with complex Heatmap, and associated packages
+library(dendextend)
+library(ComplexHeatmap)
+library(circlize)
 
 #Functions for ensuring all genes used in topGO have GO annotations, and for wrapping the topGO run tests into results table
 source("Functions/topGO_results_wrapper.R")
+#Function to plot topGO results as heatmap with genes & GO terms
+source("Functions/draw_topGO_heatmap.R")
 
 ##
 # Define Key Variables ----
@@ -57,3 +65,7 @@ save(TG_dge_down_asd.control, TG_dge_up_asd.control, TG_drim_asd.control, file =
 ## 
 
 #In progress, updating plotting function with complex heatmap
+
+draw_topGO_heatmap(TG_dge_down_asd.control, sig_asd.control[sig.names_down_asd.control,], gene_symbols, res.style = "DESeq2")
+
+draw_topGO_heatmap(TG_drim_asd.control, sig_drim_asd.control, gene_symbols, res.style = "DRIMSeq")
