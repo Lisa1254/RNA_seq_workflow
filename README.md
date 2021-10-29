@@ -18,7 +18,7 @@ Script 4: Generalized code section for working with multiple comparisons or mult
 Script 5: Section on transcript annotations and plots needs update  
 Scripts 6: Finish commenting plot after function is done  
 Script 7: In progress  
-Currently working on fixing draw_topGO_heatmap function: fix colours of annotations, fix title at top, also need accommodation for if duplicate rownames occur from annotations (currently error with DRIMSeq data)  
+draw_topGO_heatmap function: fix colours of annotations, fix title at top, also need accommodation for if duplicate rownames occur from annotations  
 Functions - verify that functions from specific packages are identified using double colon format (package::function)  
   
 
@@ -34,7 +34,7 @@ https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109827
 This data was selected because the samples include multiple runs on the same source RNA data to demonstrate combining technical replicates, and nested design of multiple factors. Original data includes multiple tissue types (Prefrontal cortex & striatum), but only striatum samples are included here.
   
 Ensembl ftp site was used for current genome build (GRCm39):  
-#Transcriptome:  
-#http://ftp.ensembl.org/pub/release-104/fasta/mus_musculus/cdna/Mus_musculus.GRCm39.cdna.all.fa.gz  
-#GTF:  
-#http://ftp.ensembl.org/pub/release-104/gtf/mus_musculus/Mus_musculus.GRCm39.104.gtf.gz  
+Transcriptome:  
+http://ftp.ensembl.org/pub/release-104/fasta/mus_musculus/cdna/Mus_musculus.GRCm39.cdna.all.fa.gz  
+GTF:  
+http://ftp.ensembl.org/pub/release-104/gtf/mus_musculus/Mus_musculus.GRCm39.104.gtf.gz  

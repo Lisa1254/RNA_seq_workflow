@@ -53,7 +53,7 @@ sig.names_drim_asd.control <- keep_annot(sig_drim_asd.control, go_annotations)
 
 TG_dge_up_asd.control <- GO_2_results(sig.names_up_asd.control, bg_genes, c("BP", "CC", "MF"), go_annotations)
 TG_dge_down_asd.control <- GO_2_results(sig.names_down_asd.control, bg_genes, c("BP", "CC", "MF"), go_annotations)
-TG_drim_asd.control <- GO_2_results(sig.names_up_asd.control, bg_genes, c("BP", "CC", "MF"), go_annotations)
+TG_drim_asd.control <- GO_2_results(sig.names_drim_asd.control, bg_genes, c("BP", "CC", "MF"), go_annotations)
 
 
 #Save results tables
@@ -64,7 +64,9 @@ save(TG_dge_down_asd.control, TG_dge_up_asd.control, TG_drim_asd.control, file =
 # Plot results ----
 ## 
 
-#In progress, updating plotting function with complex heatmap
+#Provided function acts to organize results information into complex heatmap
+
+#Input is results table from topGO wrapper function, results table from either DESeq2 or DRIMSeq (specify), and annotations table with gene id as provided through Ensembl and corresponding external symbol, as mapped with biomaRt
 
 draw_topGO_heatmap(TG_dge_down_asd.control, sig_asd.control[sig.names_down_asd.control,], gene_symbols, res.style = "DESeq2")
 
