@@ -152,8 +152,23 @@ gene_dds$SV2 <- fit.sva$sv[,2]
 #Update design matrix
 design(gene_dds) <- ~ -1 + SV1 + SV2 + group
 
-## TO DO:
-## Add plot for SVs 
+# Use provided SV plot to check if samples cluster according to a known variable
+#If there is an expected batch to emerge with the surrogate variables, use the color or shape argument to verify clustering.
+#Clustering is not expected to occur by the experimental treatment variable
+#This data set does not have supplied information for technical variation that would be expected to cluster, so this plot is mostly for demonstrating its use
+SVs_plot(gene_dds, color = "group", shape = "treatment")
+
+
+#Check clustering of experimental treatment on data that has been adjusted with the surrogate variables ("cleaned" for batch)
+
+#Use provided function to adjust count data for surrogate variables
+adj_cts <- rem_SVs(norm.counts = norm.cts, mm.full, fit.sva)
+
+#Use provided PCs_plot function to visualize adjusted data
+PCs_plot(cts = adj_cts, sample.data = colData(gene_dds), color.var = "group", shape.var = "treatment", main = "PCA plot from SVA adjusted data")
+#And for comparison to the unadjusted count data:
+PCs_plot_dds(gene_dds, color.var = "group", shape.var = "treatment", main = "PCA from VST of raw count data")
+#The differences in these plots show that the SVs are acting to enhance the connection between samples that used the same bacterial donor. The high percentage of variance explained by a single principle component in the adjusted data also demonstrates why adjusted counts should only be considered in data exploration and not for use in analysis.
 
 ## Save files
 #gene_dds will be used in script 4_DGE_DESeq2, and is being saved as gene_dds_sva to distinguish from the DESeq data set object saved with replicates collapsed, but no surrogate variable information.
