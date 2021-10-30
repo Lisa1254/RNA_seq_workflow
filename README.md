@@ -12,12 +12,11 @@ This collection of scripts and functions describes an RNA-Seq pipeline from fast
 7. Example script for comparing multiple datasets
 
 ## TO DO:  
-Script 2/3: Either add tx_txi_stpm object to Output save (large file), or make in-script note that the object is not included  
 Script 3: Additional exploratory plots  
 Script 4: Generalized code section for working with multiple comparisons or multiple datasets. Should I keep the required code correction for betaConverge? Also added section for annotations and plots, which needs updating  
 Script 5: Section on transcript annotations and plots needs update  
 Scripts 6: Finish commenting plot after function is done  
-Script 7: In progress  
+Script 7: Consider streamlining comparing of homologs into a function; fix heatmap plot from paste; add Venn diagram; should I save any of the outputs?  
 draw_topGO_heatmap function: fix colours of annotations, fix title at top, also need accommodation for if duplicate rownames occur from annotations  
 Functions - verify that functions from specific packages are identified using double colon format (package::function)  
   
