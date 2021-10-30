@@ -3,11 +3,11 @@
 ##
 
 #Data required for this script (Outputs from R script "2_Data_Import"):
-##   > transcript to gene mapping,
+##   > transcript to gene mapping
 load("Output/txmap_mm.Rdata")
-##   > Table of sample information,
+##   > Table of sample information
 load("Output/sample_info.Rdata")
-##   > tximport object of scaled transcript-level quantifications, 
+##   > tximport object of scaled transcript-level quantifications (NOTE: this is a large file, and is not included with saved output files) 
 load("Output/tx_txi_stpm.Rdata")
 ##   > tximport object of gene-level quantifications
 load("Output/gene_txi.Rdata")
