@@ -180,12 +180,112 @@ save(gene_dds, file=paste0(out_dir, "gene_dds_sva.Rdata"))
 # Exploratory Plots ----
 ##
 
+#Library Size
+#Show variation in library sizes, and impact of normalization
+#Set to display two plots side by side
+par(mfrow = c(1, 2))
+#Counts log-transformed, and not normalized
+boxplot(counts(gene_dds)+1, xlab="", log = "y", las = 2, col="lightblue", cex.axis = 0.75)
+abline(h=median(counts(gene_dds)),col="blue")
+title("Boxplots of log counts (unnormalised)", cex.main = 0.75)
+#Counts log-transformed, and normalized with DESeq2's RLE method
+boxplot(norm.cts+1, xlab="", log = "y", las = 2, col="darkred", cex.axis = 0.75)
+abline(h=median(norm.cts),col="blue")
+title("Boxplots of log counts (normalized: RLE)", cex.main=0.75)
+
+
+
+
 ## Add some additional useful & common plots for exploration
 ## Suggestions include: 
 ##   > Scatterplot matrix
-##   > Library size before & after normalization
 ##   > Heatmaps
 ##   > See section 4.2 of Love's RNA-Seq workflow for examples of Mean SD plot, & 4.6 for MDS plot.
+
+
+##
+# Test of BigPint package ----
+##
+#Testing out package bigPint for visualizations
+#I don't think I like this package, will probably delete.
+library(bigPint)
+#See full manual and help at 
+#https://lindsayrutter.github.io/bigPint
+
+#Format counts
+bp_data <- data.frame(ID=rownames(gene_dds), assay(gene_dds))
+#First column of count dataframe must be named ID and include unique identifiers
+#Remainder of columns represent samples, and must be named according to the Perl expression ^[a-zA-Z0-9]+\\.[0-9]+
+#that is, an alpha-numeric code for treatment type (e.g. ASD or CON) followed by "." as delimiter, and number for replicate
+# e.g. ASD.1
+#Going to only compare ASD to CON for the purposes of this example, and neglect nested design with donor. Might come back to change.
+colnames(bp_data)
+bp_samp_names <- colData(gene_dds)$treatment
+
+c <- 1
+a <- 1
+while ((c<5) & (a<5)) {
+  for (name in 1:length(bp_samp_names)) {
+    if (bp_samp_names[name] == "Control") {
+      bp_samp_names[name] <- paste("CON", c, sep = ".")
+      c <- c + 1
+    } else {
+      bp_samp_names[name] <- paste("ASD", a, sep = ".")
+      a <- a + 1
+    }
+  }
+}
+
+colnames(bp_data)[-1] <- bp_samp_names
+
+coldata = data.frame(row.names = colnames(bp_data)[-1], treatment = unlist(lapply(colnames(bp_data)[-1], function (x) unlist(strsplit(x, "[.]"))[1])))
+
+dds = DESeqDataSetFromMatrix(countData = bp_data[,-1], colData = coldata,
+                             design = ~ treatment)
+dds <- DESeq(dds)
+
+uTreat = unique(unlist(lapply(colnames(bp_data)[-1], function (x) unlist(strsplit(
+  x, "[.]"))[1])))
+sub_metrics <- list()
+
+for (i in 1:(length(uTreat)-1)){
+  for (j in (i+1):length(uTreat)){
+    res <- results(dds, contrast=c("treatment", uTreat[i], uTreat[j]))
+    metrics = as.data.frame(res@listData)
+    metrics = cbind(ID = res@rownames, metrics)
+    metrics$ID = as.character(metrics$ID)
+    metrics <- metrics[order(metrics$padj), ]
+    sub_metrics[[paste0(uTreat[i], "_", uTreat[j])]] <- metrics
+  }
+}
+
+for (df in seq_len(length(sub_metrics))){
+  whichPadj = which(colnames(sub_metrics[[df]])=="pvalue")
+  colnames(sub_metrics[[df]])[whichPadj] = "PValue"
+  whichPadj = which(colnames(sub_metrics[[df]])=="padj")
+  colnames(sub_metrics[[df]])[whichPadj] = "FDR"
+  whichPadj = which(colnames(sub_metrics[[df]])=="log2FoldChange")
+  colnames(sub_metrics[[df]])[whichPadj] = "logFC"
+}
+
+str(sub_metrics, strict.width = "wrap")
+names(sub_metrics)
+
+library(dplyr)
+tenSigGenes <- sub_metrics[["CON_ASD"]] %>% select(ID) %>%
+  filter(row_number() <= 10)
+tenSigGenes <- tenSigGenes[,1]
+bp_data[,-1] <- log(bp_data[,-1] + 1)
+ret <- plotLitre(data=bp_data, geneList = tenSigGenes, saveFile = FALSE)
+names(ret)
+
+ret[["CON_ASD_ENSMUSG00000094065"]]
+
+ret2 <- plotSM(bp_data, sub_metrics, pointColor = "pink",
+              saveFile = FALSE)
+names(ret2)
+
+
 
 
 ##
