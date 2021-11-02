@@ -64,6 +64,8 @@ org_ens <- "mmusculus_gene_ensembl"
 #Construct gene to transcript mapping
 #Be sure to include accurate organism
 txmap_mm <- gtf2txmap(dir=dir, file=gtf, organism = "Mus musculus")
+#If using provided mapping, instead load:
+load("Output/txmap_mm.Rdata")
 
 #Import transcripts
 #Using default of scaledTPM for counts from abundance, as recommended for downstream differential transcript usage analysis
@@ -95,13 +97,14 @@ apply(samples,2,unique)
 samples <- samples[,c(1,24,20,26)]
 #Define row and column names to something simple and descriptive
 rownames(samples) <- samples$Run
-colnames(samples) <- c("run", "sample", "treatment", "group")
+colnames(samples) <- c("run", "sample", "treatment", "ind")
 
 #Clean content of cells, simplifying descriptions used
-samples[grep("Control",samples$treatment),3] <- "Control"
+samples[grep("Control",samples$treatment),3] <- "CON"
 samples[grep("ASD",samples$treatment),3] <- "ASD"
-samples$group <- gsub(" ", "_", samples$group)
-
+#Since all samples in this set are Striatum, will remove that description from the grouped variable
+samples$ind <- gsub("^Striatum_[a-zA-Z]* ", "", samples$ind)
+samples$group <- paste(samples$treatment, samples$ind, sep = "_")
 
 #Preview table
 View(samples)
