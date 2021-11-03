@@ -12,8 +12,8 @@ This collection of scripts and functions describes an RNA-Seq pipeline from fast
 7. Example script for comparing multiple datasets
 
 ## TO DO:  
-Script 3: Additional exploratory plots  
-Script 4: Generalized code section for working with multiple comparisons or multiple datasets. Should I keep the required code correction for betaConverge? Also added section for annotations and plots, which needs updating  
+Script 3: Fix comments for exploratory plots, decide if keeping vidger package for scatterplots, or using source code to make something with ability to modify things  
+Script 4: No option right now to switch from Wald to LRT. Should I keep the required code correction for betaConverge? Also added section for plots, which needs updating  
 Script 5: Section on transcript annotations and plots needs update  
 Scripts 6: Finish commenting plot after function is done  
 Script 7: Consider streamlining comparing of homologs into a function; fix heatmap plot from paste; add Venn diagram; should I save any of the outputs?  

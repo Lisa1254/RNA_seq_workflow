@@ -23,12 +23,17 @@ library(DESeq2)
 library(ggplot2)
 #sva is used for defining batch variables
 library(sva)
+#Complex heatmap is used to draw sample distance heatmap, with circlize being used for color function in the heatmap
+library(ComplexHeatmap)
+library(circlize)
 
 #Source import functions
 #Function to plot samples by principle components from DESeq data set, or to return PC loadings. 
 source("Functions/PCA_from_dds.R")
 #Functions to modify and plot count data according to batch control with Surrogate Variable Analysis
 source("Functions/SV_data_mods.R")
+#Draw heatmap of relationships between samples
+source("Functions/samp_dist_heatmap.R")
 
 
 ##
@@ -60,6 +65,8 @@ gene_dds <- gene_dds[keep,]
 #Using "treatment" col in samples dataframe for shape
 PCs_plot_dds(gene_dds, color.var = "sample", shape.var = "treatment")
 
+#Figure saved as 3_PC_tech_reps
+
 #Technical replicates do present as nearly identical with no outliers, so the samples can be combined
 
 ## If your data has no technical replicates to combine, ##
@@ -81,7 +88,7 @@ gene_dds$run <- NULL
 #Factor "group" column of coldata for use in design 
 gene_dds$group <- factor(gene_dds$group)
 #Reference level is not necessary to set for this analysis, but can relevel to a control sample
-gene_dds$group <- relevel(gene_dds$group, "Striatum_control_1")
+gene_dds$group <- relevel(gene_dds$group, "CON_1")
 
 #Format transcript level counts using DESeq2
 tx_dds <- DESeqDataSetFromTximport(txi = tx_txi_stpm, colData = samples, design = ~1)
@@ -93,8 +100,8 @@ tx_dds <- collapseReplicates(tx_dds, groupby =  tx_dds$sample, run = tx_dds$run)
 tx_dds$run <- NULL
 
 ## Return here if not combining technical replicates ##
-tx_dds$group <- factor(gene_dds$group)
-tx_dds$group <- relevel(tx_dds$group, "Striatum_control_1")
+tx_dds$group <- factor(tx_dds$group)
+tx_dds$group <- relevel(tx_dds$group, "CON_1")
 
 #Use counts & sample information with combined replicates to produce table in format used for DRIMSeq differential transcript usage
 tx_cts <- counts(tx_dds)
@@ -166,6 +173,8 @@ adj_cts <- rem_SVs(norm.counts = norm.cts, mm.full, fit.sva)
 
 #Use provided PCs_plot function to visualize adjusted data
 PCs_plot(cts = adj_cts, sample.data = colData(gene_dds), color.var = "group", shape.var = "treatment", main = "PCA plot from SVA adjusted data")
+#Saved as 3_PC_sva_adj
+
 #And for comparison to the unadjusted count data:
 PCs_plot_dds(gene_dds, color.var = "group", shape.var = "treatment", main = "PCA from VST of raw count data")
 #The differences in these plots show that the SVs are acting to enhance the connection between samples that used the same bacterial donor. The high percentage of variance explained by a single principle component in the adjusted data also demonstrates why adjusted counts should only be considered in data exploration and not for use in analysis.
@@ -180,6 +189,10 @@ save(gene_dds, file=paste0(out_dir, "gene_dds_sva.Rdata"))
 # Exploratory Plots ----
 ##
 
+## Add some additional useful & common plots for exploration
+## Section in progress - still need to streamline code & generalize further where possible
+##Update comments
+
 #Library Size
 #Show variation in library sizes, and impact of normalization
 #Set to display two plots side by side
@@ -192,100 +205,31 @@ title("Boxplots of log counts (unnormalised)", cex.main = 0.75)
 boxplot(norm.cts+1, xlab="", log = "y", las = 2, col="darkred", cex.axis = 0.75)
 abline(h=median(norm.cts),col="blue")
 title("Boxplots of log counts (normalized: RLE)", cex.main=0.75)
+#Reset plotting to default parameters
+par(mfrow = c(1,1))
 
+#Saved as 3_box_lib_size
 
+#Heatmap
 
+#Using provided function to visualize sample distances
+sample_dist_heatmap(gene_dds)
+#Saved as 3_samp_dist
+#Samples from the same donor individual are similar to each other, control samples are similar to each other, but there is variation in the ASD samples. This distribution could indicate that there are few specific differences between the experimental groups, and may also reflect the subsampling from the original data
 
-## Add some additional useful & common plots for exploration
-## Suggestions include: 
-##   > Scatterplot matrix
-##   > Heatmaps
-##   > See section 4.2 of Love's RNA-Seq workflow for examples of Mean SD plot, & 4.6 for MDS plot.
-
+#Possibly add scatterplot
 
 ##
-# Test of BigPint package ----
+# Test vidger package ----
 ##
-#Testing out package bigPint for visualizations
-#I don't think I like this package, will probably delete.
-library(bigPint)
-#See full manual and help at 
-#https://lindsayrutter.github.io/bigPint
 
-#Format counts
-bp_data <- data.frame(ID=rownames(gene_dds), assay(gene_dds))
-#First column of count dataframe must be named ID and include unique identifiers
-#Remainder of columns represent samples, and must be named according to the Perl expression ^[a-zA-Z0-9]+\\.[0-9]+
-#that is, an alpha-numeric code for treatment type (e.g. ASD or CON) followed by "." as delimiter, and number for replicate
-# e.g. ASD.1
-#Going to only compare ASD to CON for the purposes of this example, and neglect nested design with donor. Might come back to change.
-colnames(bp_data)
-bp_samp_names <- colData(gene_dds)$treatment
+#Might delete, in progress to see
+BiocManager::install("vidger")
+library(vidger)
 
-c <- 1
-a <- 1
-while ((c<5) & (a<5)) {
-  for (name in 1:length(bp_samp_names)) {
-    if (bp_samp_names[name] == "Control") {
-      bp_samp_names[name] <- paste("CON", c, sep = ".")
-      c <- c + 1
-    } else {
-      bp_samp_names[name] <- paste("ASD", a, sep = ".")
-      a <- a + 1
-    }
-  }
-}
+vsScatterPlot(x="CON", y="ASD", data=gene_dds, d.factor="treatment", type="deseq")
+vsScatterMatrix(data=gene_dds, d.factor="group", type="deseq")
 
-colnames(bp_data)[-1] <- bp_samp_names
-
-coldata = data.frame(row.names = colnames(bp_data)[-1], treatment = unlist(lapply(colnames(bp_data)[-1], function (x) unlist(strsplit(x, "[.]"))[1])))
-
-dds = DESeqDataSetFromMatrix(countData = bp_data[,-1], colData = coldata,
-                             design = ~ treatment)
-dds <- DESeq(dds)
-
-uTreat = unique(unlist(lapply(colnames(bp_data)[-1], function (x) unlist(strsplit(
-  x, "[.]"))[1])))
-sub_metrics <- list()
-
-for (i in 1:(length(uTreat)-1)){
-  for (j in (i+1):length(uTreat)){
-    res <- results(dds, contrast=c("treatment", uTreat[i], uTreat[j]))
-    metrics = as.data.frame(res@listData)
-    metrics = cbind(ID = res@rownames, metrics)
-    metrics$ID = as.character(metrics$ID)
-    metrics <- metrics[order(metrics$padj), ]
-    sub_metrics[[paste0(uTreat[i], "_", uTreat[j])]] <- metrics
-  }
-}
-
-for (df in seq_len(length(sub_metrics))){
-  whichPadj = which(colnames(sub_metrics[[df]])=="pvalue")
-  colnames(sub_metrics[[df]])[whichPadj] = "PValue"
-  whichPadj = which(colnames(sub_metrics[[df]])=="padj")
-  colnames(sub_metrics[[df]])[whichPadj] = "FDR"
-  whichPadj = which(colnames(sub_metrics[[df]])=="log2FoldChange")
-  colnames(sub_metrics[[df]])[whichPadj] = "logFC"
-}
-
-str(sub_metrics, strict.width = "wrap")
-names(sub_metrics)
-
-library(dplyr)
-tenSigGenes <- sub_metrics[["CON_ASD"]] %>% select(ID) %>%
-  filter(row_number() <= 10)
-tenSigGenes <- tenSigGenes[,1]
-bp_data[,-1] <- log(bp_data[,-1] + 1)
-ret <- plotLitre(data=bp_data, geneList = tenSigGenes, saveFile = FALSE)
-names(ret)
-
-ret[["CON_ASD_ENSMUSG00000094065"]]
-
-ret2 <- plotSM(bp_data, sub_metrics, pointColor = "pink",
-              saveFile = FALSE)
-names(ret2)
-
-
-
+#Actually really like this. Super easy, but not a lot of options to modify or colour
 
 ##

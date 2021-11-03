@@ -115,7 +115,8 @@ View(samples)
 save(samples, file = paste0(out_dir, "sample_info.Rdata"))
 save(txmap_mm, file=paste0(out_dir, "txmap_mm.Rdata"))
 save(gene_txi, file=paste0(out_dir, "gene_txi.Rdata"))
-##NOTE: this file is large, and is NOT saved in the outputs. Keep in environment to continue to script 3 to format properly for differential transcript usage analysis
+##NOTE: the file tx_txi_stpm  is large, and is NOT included with saved outputs. Either save here, or keep in environment to continue to script 3 to format properly for differential transcript usage analysis
+save(tx_txi_stpm, file = paste0(out_dir, "tx_txi_stpm.Rdata"))
 
 #To save csv of charts:
 write.csv(samples, file=paste0(out_dir, "sample_info.csv"))

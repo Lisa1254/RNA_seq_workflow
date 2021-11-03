@@ -8,6 +8,8 @@
 load("Output/gene_dds.Rdata")
 ### If using output with surrogate variable information from batch correction:
 load("Output/gene_dds_sva.Rdata")
+##   > annotation table with gene symbols and descriptions to identify results
+load("Output/gene_symbols.Rdata")
 
 ##
 # Libraries & Functions----
@@ -15,8 +17,20 @@ load("Output/gene_dds_sva.Rdata")
 
 #DESeq2 is used for differential gene expression analysis
 library(DESeq2)
+#ggplot2 is used for count and volcano plots
+library(ggplot2)
+#circlize, complexHeatmap, dplyr used in heatmap of expression of significant genes
+library(ComplexHeatmap)
+library(circlize)
+library(dplyr)
 
 #Source import functions
+#Used as example in generalized code for streamlining multiple pairwise comparisons, but not specifically applicable to this dataset
+source("Functions/4_multiple_comparisons_deseq.R")
+#Includes functions for drawing count plot and volcano plot
+source("Functions/4_dge_res_plots.R")
+#Function to make heatmap of gene expression of significant genes
+source("Functions/4_heatmap_dds_siggenes.R")
 
 ##
 # Define Key Variables ----
@@ -70,7 +84,7 @@ resultsNames(gene_dds)
 
 #Locate coefficients for groups of interest
 #Using experiment specific names of "control" and "asd" for groups of interest. 
-coef.control <- ifelse(grepl("control", resultsNames(gene_dds)), 1, 0)
+coef.control <- ifelse(grepl("CON", resultsNames(gene_dds)), 1, 0)
 coef.asd <- ifelse(grepl("ASD", resultsNames(gene_dds)), 1, 0)
 
 #Define contrast coefficients with appropriate weighting. 
@@ -92,104 +106,79 @@ sig_asd.control <- as.data.frame(res_asd.control[which(
 save(sig_asd.control, file = paste0(out_dir, "sig_deg_asd_control.Rdata"))
 save(res_asd.control, file = paste0(out_dir, "res_deg_asd_control.Rdata"))
 
+#To save a tsv of significant genes & descriptions
+#Included for demonstration, but not saved with Outputs
+annot_asd.control <- gene_symbols[which(gene_symbols$ensembl_gene_id %in% rownames(sig_asd.control)),]
+
+#To add column with log2fold change
+annot_asd.control$direction <- sig_asd.control[match(annot_asd.control$ensembl_gene_id, rownames(sig_asd.control)),"log2FoldChange"]
+#If categorical "DOWN"/"UP" is prefered to numeric value
+annot_asd.control$direction <- ifelse(annot_asd.control$direction < 0, "DOWN", "UP")
+
+write.table(annot_asd.control, file=paste0(out_dir, "sig_gene_table_deg.tsv"), quote=FALSE, sep='\t', col.names = NA)
 
 ## 
 # Generalized code for contrasts & results ----
 ##
 
-#In progress; ideas & pasted code from previous work
+#If dataset has multiple comparisons of interest, can use provided functions to facilitate and streamline process
+#For example, if there are two treatment types, and a control group, each pairwise comparison will be of interest
 
-#Function to define all pairwise contrasts in group of sample data frame
-#Note: order of pairing will follow order of group in the data frame. Be mindful of this when interpreting direction of change in results table, or define contrasts manually above.
-#This was from a script where "group" had several factor levels, each of which had a relevant comparison
-pwise_gps <- function(sample_frame) {
-  groups <- unique(sample_frame[,which(colnames(sample_frame) == "group")])
-  k <- length(groups)
-  n <- k*(k-1)/2
-  cat("Constructing ", n, " pairwise comparisons\n")
-  pairs <- vector()
-  for (g in 1:(k-1)) {
-    for (g2 in (g+1):k) {
-      pairs <- c(pairs, paste0(groups[g], ".", groups[g2]))
-    }
-  }
-  return(pairs)
-}
+#Pairwise comparisons are not especially useful for the grouped factors in this dataset, but will be used here as an example
+#Specify colname of factor of interest using variable argument
+#If only a subset of comparisons are of interest can define manually in same format of Var1.Var2
 
-#Function to use defined contrast (format GF.CV as above) to produce results table from DESeq2 object
-#Default p-adjust method is Benjamini and Hochberg ("BH")
-#p-adj methods include c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none")
-# see ?p.adjust for more details
-res_contrast <- function(des, contrast, pAdjM = "BH") {
-  cons <- strsplit(contrast, split = "\\.")
-  res <- results(des, contrast = c("group", cons[[1]][1], cons[[1]][2]), pAdjustMethod = pAdjM)
-  return(res)
-}
+all_pwise <- pwise_gps(sample_frame = colData(gene_dds), variable = "group")
 
 #Produce results tables for each comparison of interest
-#This applies the res_contrast function defined above to each contrast indicated manually or by the contrast function.
-for (con in contrasts_0) {
-  assign(paste0("res_g0_", con),
-         res_contrast(des_0, con))
+#Specify colname of factor of interest using variable argument
+#p-adjustment method is specified above, or remove argument to use default method "BH"
+#This applies the res_contrast function provided to each contrast indicated manually or by the contrast function (format Var1.Var2).
+#Output is results object for 
+
+for (con in all_pwise) {
+  assign(paste0("res_", con),
+         results_contrast(des = gene_dds, 
+                      variable = "group", 
+                      contrast = con, 
+                      pAdjM = pAdjM))
 }
+
+#Subset each results table for genes that meet defined criteria for significance
+for (res in ls()[grepl("res_", ls())]) {
+  temp_res <- get(res)
+  assign(gsub("res", "sig", res),
+         as.data.frame(temp_res[which(
+           (temp_res$pvalue < pval_th) &
+             (temp_res$padj < padj_th) & 
+             (abs(temp_res$log2FoldChange) > l2fc_th)),]))
+  rm(temp_res)
+}
+
+#Save any results and significance tables of interest
+
+#To produce annotations table of significant genes in all comparisons, can use included function, which returns subset of gene symbol annotation table, with additional column specifying which comparison and direction of lfc
+#Code makes use of consistent naming conventions attributed above, where tables are named sig_Var1.Var2 and direction of log2FoldChange is specific to Var1
+#Input as many significance tables as desired, followed by specifying the prefix used for significance tables ("sig_"), and the gene symbols complete annotations table
+#In this demonstration with provided dataset, the comparisons between individual donor groups is not biologically relevant, and produces many genes considered statistically significant. So I will input 3 of the resulting tables for the example.
+
+test_multi_annotations <- annot_table_full(sig_ASD_9.ASD_3, sig_CON_5.ASD_3, sig_CON_5.ASD_9, sig.prefix = "sig_", symbol.annots = gene_symbols)
+
+#To save as tsv:
+write.table(test_multi_annotations, file=paste0(out_dir, "sig_gene_compare_deg.tsv"), quote=FALSE, sep='\t', col.names = NA)
+#Will save subset as R file for reference
+test_multi_annotations <- test_multi_annotations[1:10,]
+save(test_multi_annotations, file = paste0(out_dir, "test_multi_annot.Rdata"))
+
 
 
 ##
-# Plots & Annotations for Significant genes ----
+# Plots for Significant genes ----
 ##
 
-#This section is in progress. Currently has rough pasted code from other scripts to properly integrate
+#Currently, gene count plot and volcano plot code are in progress in 4_dge_res_plots script, but might separate, because count plot requires more code than the volcano plot. Might just include simple ggplot directly in this script for volcano
 
-#Add here the subsetting of the original gene symbol dataframe to get gene identities
-
-#When multiple comparisons of interest, I have added a col to describe which gene belongs to which comparison using the following code as example
-#Add comparison column for relevant contrasts
-annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd.nt, "ASD-NT", NA)
-
-annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd1.nt, paste(annot_sig_drim$comparison, "ASD1-NT", sep=","), annot_sig_drim$comparison)
-
-annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd2.nt, paste(annot_sig_drim$comparison, "ASD2-NT", sep=","), annot_sig_drim$comparison)
-
-annot_sig_drim$comparison <- ifelse(annot_sig_drim$ensembl_gene_id %in% names_drim_asd1.asd2, paste(annot_sig_drim$comparison, "ASD1-ASD2", sep=","), annot_sig_drim$comparison)
-
-annot_sig_drim$comparison <- gsub("NA,", "", annot_sig_drim$comparison)
-
-#If I keep this, make it more efficient & more generally applicable
-
-#This could also be a good spot to add gene count plot, like the following code from my exploration of Victoria's metabolite rescue study:
-count.table <- function(count.data, sample.data, annot_frame) {
-  genes <- annot_frame[,1]
-  symbols <- annot_frame[,2]
-  count.frame <- data.frame(gene=rep(genes, ncol(count.data)),
-                            symbol=rep(symbols, ncol(count.data)),
-                            counts=as.vector(count.data[genes,]),
-                            sample=rep(colnames(count.data), 
-                                       each=length(genes)),
-                            group=rep(sample.data[,2], 
-                                      each=length(genes)))
-  count.frame$symbol <- factor(count.frame$symbol, levels = count.frame[1:length(genes),2])
-  return(count.frame)
-}
-annot_sub <- gene_symbol_all[which(gene_symbol_all$ensembl_gene_id %in% resc_genes_update_ens),]
-samples <- as.data.frame(colData(gene_dds_mr))
-gene_dds_mr <- estimateSizeFactors(gene_dds_mr)
-counts <- counts(gene_dds_mr, normalized=TRUE)
-
-prev_resc_table <- count.table(counts, samples, annot_sub)
-
-ggplot(prev_resc_table, mapping = aes(x=symbol, y=counts, fill=group, color=group)) +
-  geom_dotplot(binaxis = "y", stackdir = "center", binwidth = 1/30) +
-  scale_y_log10() +
-  coord_flip() +
-  labs(title = "Gene counts for previously identified rescued genes") +
-  labs(y = "Log10 normalized counts")
-
-#Could probably collect the count table function and the ggplot code into a single function to easily plot counts of selected genes
-
-
-# This is also a good place to add a volcano plot
-
-
+#Also in progress, script 4_heatmap_dds_siggenes
 
 
 
