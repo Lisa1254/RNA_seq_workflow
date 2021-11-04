@@ -13,6 +13,16 @@ load("Output/tx_ct_formatted.Rdata")
 
 #DRIMSeq is used for differential transcript usage analysis.
 library(DRIMSeq)
+#Transcript annotations retrieved from biomaRt
+library(biomaRt)
+#ggplot2, reshape2, and stringr used in plots of transcript proportions
+library(ggplot2)
+library(reshape2)
+library(stringr)
+
+#Source custom functions
+#This functions modifies the source code for DRIMSeq's plotProportions function to allow for user input to specific attributes
+source("Functions/5_plot_proportions_DRIMmod.R")
 
 
 ##
@@ -66,10 +76,10 @@ drimds <- dmFilter(drimds,
 drimds_sub <- drimds[1:200,]
 system.time(drimds_sub <- dmPrecision(drimds_sub, design = mm.full))
 
-#Took 91.745 seconds
+#Took 89.866 seconds
 #Total time expected to be
-(91.745/60)*(length(drimds)/200)
-#68 minutes expected
+(89.866/60)*(length(drimds)/200)
+#66 minutes expected
 
 #Save files here, because next step is very slow, so it is a good idea to be able to return to before the command
 save(drimds, mm.full, file=paste0(out_dir, "drim_prep_files.Rdata"))
@@ -85,7 +95,7 @@ drimds <- dmFit(drimds, design = mm.full, verbose = 1)
 
 #Locate coefficients for groups of interest
 #Using experiment specific names of "control" and "asd" for groups of interest. 
-coef.control <- ifelse(grepl("control", colnames(design(drimds))), 1, 0)
+coef.control <- ifelse(grepl("CON", colnames(design(drimds))), 1, 0)
 coef.asd <- ifelse(grepl("ASD", colnames(design(drimds))), 1, 0)
 
 #Define contrast coefficients with appropriate weighting. 
@@ -112,16 +122,25 @@ save(sig_drim_asd.control, file = "Output/sig_drim_asd_control.Rdata")
 # Annotations and plots ----
 ##
 
-# In progress still, currently includes rough pasted code from previous scripts
+#To prep annotation table with biomaRt, need organism's gene ensembl
+org_ens <- "mmusculus_gene_ensembl"
+#Other common species are: drerio_gene_ensembl ; hsapiens_gene_ensembl ; dmelanogaster_gene_ensembl
+#Can check other available datasets with:
+#listDatasets(useMart("ENSEMBL_MART_ENSEMBL"))
 
-#Can get transcript annotations from biomaRt (pasted from metabolite rescue exploration)
-library("biomaRt")
-ensembl_dr = useDataset("drerio_gene_ensembl", mart=useMart("ENSEMBL_MART_ENSEMBL"))
+ensembl = useDataset(org_ens, mart=useMart("ENSEMBL_MART_ENSEMBL"))
 
-annot_tr1 <- getBM(attributes = c('ensembl_gene_id', 'external_gene_name', 'ensembl_transcript_id', 'transcript_length', 'external_transcript_name', 'transcript_biotype'),
+annot_transcript <- getBM(attributes = c('ensembl_gene_id', 'external_gene_name', 'ensembl_transcript_id', 'transcript_length', 'external_transcript_name', 'transcript_biotype'),
                    filters = "ensembl_gene_id",
-                   values = all_drim_mr,
-                   mart = ensembl_dr)
+                   values = rownames(sig_drim_asd.control),
+                   mart = ensembl)
 
-#Can use transcript annotations and plotProportions (DRIMSeq version, or my modified code) to plot and compare transcript usage
 
+#plotProportions in progress
+#Looks pretty good so far, just want to add mean group proportion in plot and genewise_precision in title (maybe use symbol for title?)
+plotProp_mod(drimds, rownames(sig_drim_asd.control)[1], group.name = "treatment", tx_annots = annot_transcript)
+
+
+
+
+##

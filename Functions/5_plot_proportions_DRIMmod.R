@@ -1,10 +1,19 @@
 ## Paste & mod of source code for plotProportions (barplot) in the DRIMSeq package
 
-plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, order_features = TRUE, order_samples = TRUE, group_colors = NULL, main = NULL) {
+plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, tx_annots, order_features = TRUE, order_samples = TRUE, group_colors = NULL, main = NULL) {
   
   #Get count table for gene of interest
   count.table <- counts(drim_obj[gene,])
-  rownames(count.table) <- count.table[,2]
+  feat_names <- count.table[,2]
+  
+  if (!missing(tx_annots)) {
+    feat_descrip <- tx_annots[match(feat_names, tx_annots$ensembl_transcript_id),"transcript_biotype"]
+    feat_size <- tx_annots[match(feat_names, tx_annots$ensembl_transcript_id),"transcript_length"]
+    feat_names <- paste0(feat_names, ": ", feat_descrip, " (", feat_size, "bp)")
+  }
+  
+  rownames(count.table) <- feat_names
+  
   count.table <- count.table[,-c(1,2)]
   #Identify group factor
   group <- samples(drim_obj)[,group.name]
@@ -19,8 +28,10 @@ plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, order_features 
   proportions <- prop.table(as.matrix(count.table), 2)
   proportions[proportions == "NaN"] <- NA
   
+  ## Set up table
   prop_samp <- data.frame(feature_id = rownames(proportions), proportions, 
                           stringsAsFactors = FALSE)
+  
   
   prop_fit <- NULL
   
@@ -48,14 +59,16 @@ plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, order_features 
   }
   
   ## Melt prop_samp
-  #Note: melt is a function of library(reshape2)
-  prop_samp <- melt(prop_samp, id.vars = "feature_id", 
+  prop_samp <- reshape2::melt(prop_samp, id.vars = "feature_id", 
                     variable.name = "sample_id", value.name = "proportion", 
                     factorsAsStrings = FALSE)
+  
+
   
   prop_samp$feature_id <- factor(prop_samp$feature_id, levels = feature_levels)
   prop_samp$group <- rep(group, each = nrow(count.table))
   prop_samp$sample_id <- factor(prop_samp$sample_id, levels = sample_levels)
+  
   
   #Skipping steps for md (additional sample information)
   #Skipping steps for prop_fit (from fit_full skipped above)
@@ -106,8 +119,11 @@ plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, order_features 
     ggtitle(main) +
     scale_fill_manual(name = "Groups", values = group_colors, 
                       breaks = names(group_colors)) +
+    scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
     xlab("Features") +
     ylab("Proportions")
   
 }
 
+
+#prop_samp$feature_id <- paste(prop_samp$feature_id, tx_annots[which(tx_annots$ensembl_transcript_id == prop_samp$feature_id),"transcript_biotype"], sep = ", ")
