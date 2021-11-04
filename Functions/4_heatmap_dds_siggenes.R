@@ -2,17 +2,22 @@
 
 #Libraries circlize, complexHeatmap, dplyr
 
-#Treatment annotation - colData column must be labelled "treatment" and can handle up to 5 levels
+#Resulting plot is heatmap of gene expression levels based on either input genes list, or top n genes ordered by increasing padj of results table
+#"ranks" annotation shows relative total count of gene across all samples, such that purple annotations have higher overall expression, and white/gray annotations have lower overall expression (default is to display, but can turn off with rank.annot = FALSE)
 
 # Inputs required: 
 # > dds_obj with sample data and gene counts
 # > dds_results with padj for subsetting
+# > colname of variable being used for colour annotations in sample clustering
 # Optional inputs:
+# > second colname of sample data for second sample cluster annotation
 # > sample_sub, a vector of which samples to include
 # > default n=200, (maximum) number of genes to include in table, provided they meet the provided padj threshold
 # > default p.adj=0.5, maximum padj value for inclusion in chart
+# > Alternate to using top 200 genes that meet padj threshold, a specific list of genes to include can be provided
+#If results table is provided, it will override given list of significant genes
 
-draw_ch_TopGenes <- function(dds_obj, dds_results, sig_genes = NULL, sample_sub, n=200, p.adj=0.5) {
+draw_ch_TopGenes <- function(dds_obj, dds_results, col.name, col.name2, sig_genes = NULL, sample_sub, n=200, p.adj=0.5, rank.annot = TRUE) {
   
   #Prep relatedness tables
   if (missing(dds_results)) {
@@ -46,33 +51,48 @@ draw_ch_TopGenes <- function(dds_obj, dds_results, sig_genes = NULL, sample_sub,
   row_ha = rowAnnotation(ranks = ind, col = list(ranks=colorRamp2(c(1, median(ind), max(ind)), c("white", "grey", "purple"))))
   
   #Prep treatment group annotations
-  groups <- factor(colData(dds_obj)[,"treatment"])
+  group.col <- which(colnames(colData(dds_obj)) == col.name)
+  groups <- factor(colData(dds_obj)[,group.col])
   gp_level <- levels(groups)
   cols5 <- c("darkblue", "magenta", "forestgreen", "chocolate1", "gray48")
   gp_cols <- cols5[1:length(gp_level)]
   names(gp_cols) <- gp_level
   
-  dates <- factor(colData(dds_obj)[,"date"])
-  date_level <- levels(dates)
-  date_cols <- rainbow(length(date_level))
-  names(date_cols) <- date_level
-  
-  col_list <- list(group=gp_cols, date=date_cols)
-  ha_trt = HeatmapAnnotation(group = groups, date=dates,
-                          col = col_list)
+  if (!missing(col.name2)) {
+    group.col2 <- which(colnames(colData(dds_obj)) == col.name2)
+    groups2 <- factor(colData(dds_obj)[,group.col2])
+    gp_level2 <- levels(groups2)
+    cols5b <- c("cornflowerblue", "coral1", "blueviolet", "darkgoldenrod1", "brown4")
+    gp_cols2 <- cols5b[1:length(gp_level2)]
+    names(gp_cols2) <- gp_level2
+    
+    col_list <- list(group=gp_cols, group2=gp_cols2)
+    ha_trt = HeatmapAnnotation(group = groups, group2=groups2,
+                               col = col_list)
+  } else {
+    col_list <- list(group=gp_cols)
+    ha_trt = HeatmapAnnotation(group = groups,
+                               col = col_list)
+  }
+
   
   #Make Heatmaps
   
   col_fun = colorRamp2(c(-2, 0, 2), c("red", "white", "blue"))
   
-  Heatmap(z.mat, name = "z-score",
+  h <- Heatmap(z.mat, name = "z-score",
           show_row_name = FALSE,
           col = col_fun,
           row_names_gp = gpar(fontsize = 6),
           cluster_columns = TRUE,
           top_annotation = ha_trt,
-          right_annotation = row_ha
   )
+  
+  if (rank.annot) {
+    draw(h + row_ha)
+  } else {
+    draw(h)
+  }
   
 }
 

@@ -8,7 +8,7 @@
 load("Output/gene_dds.Rdata")
 ### If using output with surrogate variable information from batch correction:
 load("Output/gene_dds_sva.Rdata")
-##   > annotation table with gene symbols and descriptions to identify results
+##   > annotation table with gene symbols and descriptions to identify results (output of script 2_Data_Import)
 load("Output/gene_symbols.Rdata")
 
 ##
@@ -27,8 +27,8 @@ library(dplyr)
 #Source import functions
 #Used as example in generalized code for streamlining multiple pairwise comparisons, but not specifically applicable to this dataset
 source("Functions/4_multiple_comparisons_deseq.R")
-#Includes functions for drawing count plot and volcano plot
-source("Functions/4_dge_res_plots.R")
+#Includes function for drawing gene count plot
+source("Functions/4_dge_count_plot.R")
 #Function to make heatmap of gene expression of significant genes
 source("Functions/4_heatmap_dds_siggenes.R")
 
@@ -176,10 +176,63 @@ save(test_multi_annotations, file = paste0(out_dir, "test_multi_annot.Rdata"))
 # Plots for Significant genes ----
 ##
 
-#Currently, gene count plot and volcano plot code are in progress in 4_dge_res_plots script, but might separate, because count plot requires more code than the volcano plot. Might just include simple ggplot directly in this script for volcano
+#Using provided function, can visualize the differences in counts of significant genes
+#Demonstrating with subset of first 10 genes in significance table constructed
 
-#Also in progress, script 4_heatmap_dds_siggenes
+count.plot(gene_dds, 
+           rownames(sig_asd.control)[1:10], 
+           gene_symbols, 
+           "treatment")
+
+#Saved as 4_gene_counts
 
 
+## Volcano plot
+
+#Input is complete results table from DESeq2, as dataframe, excluding any rows that have NA as value in padj column
+#Significance is coloured based on padj and log2FoldChange thresholds defined above, or modify for different visualization
+
+sub_res_df <- as.data.frame(res_asd.control)[!is.na(res_asd.control$padj),]
+ggplot(sub_res_df, mapping=aes(x=log2FoldChange, y=-log10(padj))) +
+  geom_point(aes(color = 
+        ifelse((padj>padj_th) | (abs(log2FoldChange)<l2fc_th), 'black',
+               ifelse(log2FoldChange>l2fc_th, "blue", "red")))) +
+  scale_colour_manual(labels = c("No Change", "Sig Up", "Sig Down"),
+                      values=c('black', 'blue', 'red')) + 
+  labs(color = "DGE", title = "Volcano Plot of DGE")
+
+#Saved as 4_volcano
+
+
+# Heatmap of how gene expression clusters samples
+#Using provided function. Several modifiers are describe in function script, a few examples are shown here
+
+#With only ASD/CON group annotation & top 200 genes by increasing padj in results table:
+draw_ch_TopGenes(dds_obj = gene_dds, 
+                 dds_results = res_asd.control, 
+                 col.name = "treatment", 
+                 rank.annot = FALSE)
+
+#Same, but with annotations added for sample donor group, and rank of gene expression (ordered by total number of counts to gene across samples):
+draw_ch_TopGenes(dds_obj = gene_dds, 
+                 dds_results = res_asd.control, 
+                 col.name = "treatment", 
+                 col.name2 = "group")
+
+#This one is saved as 4_gene_heatmap
+
+#With CON_5 samples removed:
+rem_con5 <- rownames(colData(gene_dds)[-(which(colData(gene_dds)$group == "CON_5")),])
+draw_ch_TopGenes(dds_obj = gene_dds, 
+                 dds_results = res_asd.control, 
+                 col.name = "treatment", 
+                 col.name2 = "group", 
+                 sample_sub = rem_con5)
+
+#With all genes in the sig_asd.control table produced:
+draw_ch_TopGenes(dds_obj = gene_dds, 
+                 sig_genes = rownames(sig_asd.control), 
+                 col.name = "treatment", 
+                 col.name2 = "group")
 
 ##
