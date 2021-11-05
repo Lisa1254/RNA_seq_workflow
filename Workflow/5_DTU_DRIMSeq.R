@@ -15,10 +15,9 @@ load("Output/tx_ct_formatted.Rdata")
 library(DRIMSeq)
 #Transcript annotations retrieved from biomaRt
 library(biomaRt)
-#ggplot2, reshape2, and stringr used in plots of transcript proportions
+#ggplot2, reshape2, and used in plots of transcript proportions
 library(ggplot2)
 library(reshape2)
-library(stringr)
 
 #Source custom functions
 #This functions modifies the source code for DRIMSeq's plotProportions function to allow for user input to specific attributes
@@ -112,11 +111,11 @@ rownames(sig_drim_asd.control) <- sig_drim_asd.control$gene_id
 sig_drim_asd.control$gene_id <- NULL
 
 #Save fit because it took a long time to make
-save(drimds, file = "Output/drimds.Rdata")
+save(drimds, file = paste0(out_dir, "drimds.Rdata"))
 #Save test file because it has counts used in precision. Might not need if I use my modified function 
-save(test_asd.control, file = "Output/test_drim_asd_control.Rdata")
+save(test_asd.control, file = paste0(out_dir, "test_drim_asd_control.Rdata"))
 #Save significant genes table
-save(sig_drim_asd.control, file = "Output/sig_drim_asd_control.Rdata")
+save(sig_drim_asd.control, file = paste0(out_dir,"sig_drim_asd_control.Rdata"))
 
 ##
 # Annotations and plots ----
@@ -135,12 +134,38 @@ annot_transcript <- getBM(attributes = c('ensembl_gene_id', 'external_gene_name'
                    values = rownames(sig_drim_asd.control),
                    mart = ensembl)
 
-
-#plotProportions in progress
-#Looks pretty good so far, just want to add mean group proportion in plot and genewise_precision in title (maybe use symbol for title?)
-plotProp_mod(drimds, rownames(sig_drim_asd.control)[1], group.name = "treatment", tx_annots = annot_transcript)
+#Save transcript annotations
+save(annot_transcript, file = paste0(out_dir, "annot_transcript.Rdata"))
 
 
+#DRIMSeq has a function plotProportions, but it doesn't provide much opportunity to customize, so this repository has modified the source code and provided updated version as a function. See script 5_plot_proportions_DRIMmod for full description of parameters. Some examples are below
 
+#Basic plot, similar to DRIMSeq's function:
+plotProp_mod(drim_obj = drimds, 
+             gene = rownames(sig_drim_asd.control)[2], 
+             group.name = "treatment")
+#For comparison, this is the original plot
+#Main difference is value assigned to group mean annotations, which are calculated in the original function based on group input to design matrix, and not grouping variable supplied to plot like with modified function
+plotProportions(drimds, 
+                gene_id = rownames(sig_drim_asd.control)[2],
+                group_variable = "treatment")
+
+#To add annotations to transcripts & if transcript annotation table is provided, can change title to gene symbol instead:
+plotProp_mod(drim_obj = drimds, 
+             gene = rownames(sig_drim_asd.control)[2], 
+             group.name = "treatment",
+             tx_annots = annot_transcript,
+             main = "symbol")
+#Saved as 5_plotProp_Uty_annots
+
+#Can remove gene annotations and points with group means
+plotProp_mod(drim_obj = drimds, 
+             gene = rownames(sig_drim_asd.control)[2], 
+             group.name = "treatment",
+             gp.mean = FALSE,
+             gene_annot = FALSE,
+             main = "Transcript proportions without annotations")
+
+#See function's script to get further information, including on additional arguments for only plotting a subset of samples, colour options, and choosing whether to/ how to order features and samples
 
 ##

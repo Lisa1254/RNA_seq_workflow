@@ -14,7 +14,6 @@ This collection of scripts and functions describes an RNA-Seq pipeline from fast
 ## TO DO:  
 Script 3: Fix comments for exploratory plots, decide if keeping vidger package for scatterplots, or using source code to make something with ability to modify things  
 Script 4: No option right now to switch from Wald to LRT. Should I keep the required code correction for betaConverge?  
-Script 5: Section on transcript plots needs update, still need to add mean proportion by group, and genewise_precision with title (possibly swap ensembl title for symbol)  
 Scripts 6: Finish commenting plot after function is done  
 Script 7: Consider streamlining comparing of homologs into a function; fix heatmap plot from paste; add Venn diagram; should I save any of the outputs?  
 draw_topGO_heatmap function: fix colours of annotations, fix title at top, also need accommodation for if duplicate rownames occur from annotations  
