@@ -24,16 +24,16 @@ library(ComplexHeatmap)
 library(circlize)
 
 #Functions for ensuring all genes used in topGO have GO annotations, and for wrapping the topGO run tests into results table
-source("Functions/topGO_results_wrapper.R")
+source("Functions/6_topGO_results_wrapper.R")
 #Function to plot topGO results as heatmap with genes & GO terms
-source("Functions/draw_topGO_heatmap.R")
+source("Functions/6_draw_topGO_heatmap.R")
 
 ##
 # Define Key Variables ----
 ##
 
 #Output directory for saving files
-out_dir = paste0(getwd(),"/Output/")
+out_dir <- paste0(getwd(),"/Output/")
 
 
 ##
@@ -68,6 +68,12 @@ save(TG_dge_down_asd.control, TG_dge_up_asd.control, TG_drim_asd.control, file =
 
 #Input is results table from topGO wrapper function, results table from either DESeq2 or DRIMSeq (specify), and annotations table with gene id as provided through Ensembl and corresponding external symbol, as mapped with biomaRt
 
-draw_topGO_heatmap(TG_dge_down_asd.control, sig_asd.control[sig.names_down_asd.control,], gene_symbols, res.style = "DESeq2")
+draw_topGO_heatmap(topGO.table = TG_dge_down_asd.control, 
+                   results.table = sig_asd.control[sig.names_down_asd.control,], 
+                   annot.table = gene_symbols, 
+                   res.style = "DESeq2")
 
-draw_topGO_heatmap(TG_drim_asd.control, sig_drim_asd.control, gene_symbols, res.style = "DRIMSeq")
+draw_topGO_heatmap(topGO.table = TG_drim_asd.control, 
+                   results.table = sig_drim_asd.control, 
+                   annot.table = gene_symbols, 
+                   res.style = "DRIMSeq")
