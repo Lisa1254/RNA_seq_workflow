@@ -68,12 +68,35 @@ save(TG_dge_down_asd.control, TG_dge_up_asd.control, TG_drim_asd.control, file =
 
 #Input is results table from topGO wrapper function, results table from either DESeq2 or DRIMSeq (specify), and annotations table with gene id as provided through Ensembl and corresponding external symbol, as mapped with biomaRt
 
+#For the genes with decreased expression (subset the results table for computational efficiency, but it isn't necessary for functionality)
 draw_topGO_heatmap(topGO.table = TG_dge_down_asd.control, 
                    results.table = sig_asd.control[sig.names_down_asd.control,], 
                    annot.table = gene_symbols, 
                    res.style = "DESeq2")
 
+#Same for genes with increased expression (not many results in this example dataset)
+draw_topGO_heatmap(topGO.table = TG_dge_up_asd.control, 
+                   results.table = sig_asd.control[sig.names_up_asd.control,], 
+                   annot.table = gene_symbols, 
+                   res.style = "DESeq2")
+
+#Can include both increased and decreased expression in same plot
+#This plot includes a lot of genes, so I've added argument to decrease gene font size in the plot, but for presentation consider decreasing the number of terms/genes in the plot
+draw_topGO_heatmap(topGO.table = rbind(TG_dge_down_asd.control,TG_dge_up_asd.control), 
+                   results.table = sig_asd.control, 
+                   annot.table = gene_symbols, 
+                   res.style = "DESeq2",
+                   gene.font.size = 5.5)
+
+#Saved as 6_tg_deseq
+
+#Also works for DRIMSeq style results table
+#This example had many genes with only "Cytoplasm" as the enriched term, so I've added arguments for gene.min=2 to only include in the plots genes that have at least 2 terms, and term.min=3 just for further  simplification
 draw_topGO_heatmap(topGO.table = TG_drim_asd.control, 
                    results.table = sig_drim_asd.control, 
                    annot.table = gene_symbols, 
-                   res.style = "DRIMSeq")
+                   res.style = "DRIMSeq",
+                   gene.min = 2, 
+                   term.min = 3)
+
+#Saved as 6_tg_drim

@@ -178,4 +178,3 @@ plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, tx_annots, orde
 }
 
 
-#prop_samp$feature_id <- paste(prop_samp$feature_id, tx_annots[which(tx_annots$ensembl_transcript_id == prop_samp$feature_id),"transcript_biotype"], sep = ", ")
