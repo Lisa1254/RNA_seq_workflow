@@ -1,7 +1,5 @@
 ## Function for making comparison chart of homologs
 
-#In progress still
-
 ## Data formatting and homologene function wrapper
 # Library: homologene
 #Required inputs:
@@ -12,7 +10,7 @@
 # If genes1 is provided as symbols, specify symbols1 = TRUE
 #If no target tax provided, default behaviour is to use tax2 as target tax for homologene. This would be the use, for example, if genes1 are mouse genes, and genes2 are human genes. If a different target tax for homologene is desired, for example if genes1 are mouse genes and genes2 are zebrafish genes, can specify human to be the target tax 
 
-homol_table <- function(genes1, tax1, genes2, tax2, annots1, annots2, symbols1 = FALSE, target.tax) {
+homol_table <- function(genes1, tax1, annots1, genes2, tax2, annots2, symbols1 = FALSE, target.tax) {
   
   #Translate Ensembl genes to symbols
   if (symbols1) {
@@ -57,8 +55,8 @@ homol_table <- function(genes1, tax1, genes2, tax2, annots1, annots2, symbols1 =
   }
   
   if (overlap.n == 0) {
-    cat("No homologous genes in provided sets")
-    break
+    stop("No homologous genes in provided sets")
+    
   }
   
   #Build table
@@ -67,15 +65,14 @@ homol_table <- function(genes1, tax1, genes2, tax2, annots1, annots2, symbols1 =
     colnames(overlap.table) <- c("Gene Set 1", "Gene Set 2")
   } else {
     overlap.table <- homologs1[which(homologs1[,2] %in% homologs2[,2]),c(1,2)]
+    colnames(overlap.table) <- c("Gene Set 1", "Homolog (Target Taxonomy)")
+    overlap.table$`Gene Set 2` <- homologs2[match(overlap.table[,2], homologs2[,2]),1]
+    overlap.table <- overlap.table[,c(1,3,2)]
   }
-
-
-  #Pasted stuff for reference in building function
-  #ortho_overlap <- merge(test_homol_shdr_human, test_homol_andr_human, by = "9606", all.x = FALSE, all.y = FALSE)
-  #ortho_overlap <- ortho_overlap[,c(1,2,5)]
-  #colnames(ortho_overlap) <- c("Human", "Mouse", "Zebrafish")
-  #homol_overlap_drim$Description <- gene_symbols[match(homol_overlap_drim$Mouse, gene_symbols$external_gene_name), 3]
   
+  overlap.table$Description <- annots1[match(overlap.table[,1], annots1$external_gene_name), "description"]
+  
+  return(overlap.table)
 }
 
 

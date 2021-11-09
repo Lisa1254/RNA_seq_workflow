@@ -6,7 +6,7 @@
 ##   > significant genes determined in scripts 4 & 5
 load("Output/sig_deg_asd_control.Rdata")
 load("Output/sig_drim_asd_control.Rdata")
-##   > other gene lists for comparison (can use SPARK ASD-risk genes as specified below)
+##   > other gene lists for comparison (can use SPARK ASD-risk genes and provided example gene lists as specified below)
 ##   > Gene to symbol & description mappings (Script 2)
 load("Output/gene_symbols.Rdata")
 
@@ -18,7 +18,7 @@ load("Output/gene_symbols.Rdata")
 library(homologene)
 
 #Function used to 
-source()
+source("Functions/7_homologene_table.R")
 
 ##
 # Define Key Variables ----
@@ -30,49 +30,83 @@ out_dir = paste0(getwd(),"/Output/")
 #Taxonomic ID number for species being compared
 human_taxID <- 9606
 mouse_taxID <- 10090
-#Zebrafish ID, as another common species is below
-#zebrafish_taxID <- 7955
+zebrafish_taxID <- 7955
 
 
 #For comparison, will be using list of genes with demonstrated strong association with ASD-risk, according to Simons Foundation Powering Autism Research for Knowledge
 #https://www.sfari.org/grant/2021-genomics-of-asd-pathways-to-genetic-therapies-request-for-applications/
-human_SPARK <- c("ADNP", "AHDC1", "ANKRD11", "ARID1B", "ASXL3", "BCKDK", "BCL11A", "CASK", "CHAMP1", "CHD2", "CHD8", "CNOT3", "CREBBP", "CSNK2A1", "CTCF", "CTNNB1", "DDX3X", "DEAF1", "DYNC1H1", "DYRK1A", "EHMT1", "EIF3F", "EP300", "FOXG1", "FOXP1", "GRIN2B", "HIVEP2", "HNRNPH2", "HNRNPU", "IQSEC2", "KMT2A", "MED13L", "MYT1L", "NSD1", "PACS1", "POGZ", "PPP2R5D", "SCN1A", "SCN2A", "SCN8A", "SETBP1", "SETD5", "SLC6A1", "SMARCA2", "SRCAP", "STXBP1", "SYNGAP1", "TRIO", "USP9X")
+#Including both the full list of genes with proposed ASD-risk, and high-priority list
+#Also for providing list of zebrafish genes to demonstrate obtaining homolog table as positioning experimental results within field of established research of comparable experiments
+load("Data/ex_compare_genes.Rdata")
 
+ex_dr_geneset_ens <- ex_annots_dr$ensembl_gene_id
+ex_dr_geneset_symbol <- ex_annots_dr$external_gene_name
+
+#This part considering including
+#Loaded genes from separately passing the full Sharon dataset to the pipeline
+#Saving here for use when re-loading script
+save(sig_full_deg_Striatum, sig_full_drim_PFC, sig_full_drim_Striatum, file = "Data/full_data_results.Rdata")
+load("Data/full_data_results.Rdata")
 
 ##
 # Compare known homologs ----
 ##
 
-#Consider streamlining the next series of steps into a function
+#The source data was exploring genes differing between GF mice colonized with samples derived from ASD and typically-developing (TD) people, with a focus on alternative splicing. Here I'll compare the results from this experiment with the human genes on the SPARK high ASD-risk for homologs.
 
-#Express significant genes by their symbols
-sig_deg_symbol <- gene_symbols[which(gene_symbols$ensembl_gene_id %in% rownames(sig_asd.control)),"external_gene_name"]
-sig_drim_symbol <- gene_symbols[which(gene_symbols$ensembl_gene_id %in% rownames(sig_drim_asd.control)),"external_gene_name"]
+#Using provided homologene wrapper function for formatting inputs and creating table of homologous genes in different sets, a few examples are below
 
-#Check for duplicated gene names
-sum(duplicated(sig_deg_symbol))
-sum(duplicated(sig_drim_symbol))
-#Both have zero duplicated names
+#If there are no overlapping genes, the function should return an error message for having no homologous genes in provided sets
+#None of the genes significant to the DGE analysis are in the SPARK priority ASD list
+test_none <- homol_table(genes1 = rownames(sig_asd.control), 
+                    tax1 = mouse_taxID, 
+                    annots1 = gene_symbols, 
+                    genes2 = human_SPARK_priority, 
+                    tax2 = human_taxID)
 
-#If any are duplicated, can either locate and manually adjust symbols, or
-sig_deg_symbol <- unique(sig_deg_symbol)
-sig_drim_symbol <- unique(sig_drim_symbol)
+#Comparison of all DGE analysis results with full set of human SPARK ASD-risk genes
+deg_spark_all <- homol_table(genes1 = rownames(sig_asd.control), 
+                         tax1 = mouse_taxID, 
+                         annots1 = gene_symbols, 
+                         genes2 = human_SPARK_all, 
+                         tax2 = human_taxID)
 
-#Use homologene to get homologs
-deg_homologs <- homologene(sig_deg_symbol, inTax = mouse_taxID, outTax = human_taxID,  db = homologene::homologeneData2)
+#This shows the DTU analysis results that are homologous to the human genes in the full list of SPARK ASD-risk genes (1 gene)
+dtu_spark_all <- homol_table(genes1 = rownames(sig_drim_asd.control), 
+                    tax1 = mouse_taxID, 
+                    annots1 = gene_symbols, 
+                    genes2 = human_SPARK_all, 
+                    tax2 = human_taxID)
 
-drim_homologs <- homologene(sig_drim_symbol, inTax = mouse_taxID, outTax = human_taxID,  db = homologene::homologeneData2)
+#If comparing to other another experiment that uses a different species but comparable experimental design, it may be interesting to identify if homologous genes were identified in both.
+dtu_ex_dr <- homol_table(genes1 = rownames(sig_drim_asd.control), 
+                    tax1 = mouse_taxID, 
+                    annots1 = gene_symbols, 
+                    genes2 = ex_dr_geneset_symbol, 
+                    tax2 = zebrafish_taxID)
 
-#Check if any of genes in this set match the SPARK list
-deg_homologs[which(deg_homologs$`9606` %in% human_SPARK),]
-#None
-drim_homologs[which(drim_homologs$`9606` %in% human_SPARK),]
-#Cask, Iqsec2, and Myt1l match
+#Can add third taxonomy as target, if like in the above example would like to also know the human homologous gene to the mouse and zebrafish gene, so that other comparisons can be done downstream, such as to the human SPARK ASD-risk genes
+#The second gene set can also be provided as Ensembl gene ids if a second annotation table is provided
+dtu_ex_dr_human <- homol_table(genes1 = rownames(sig_drim_asd.control), 
+                         tax1 = mouse_taxID, 
+                         annots1 = gene_symbols, 
+                         genes2 = ex_dr_geneset_ens, 
+                         tax2 = zebrafish_taxID,
+                         annots2 = ex_annots_dr,
+                         target.tax = human_taxID)
 
-homol_overlap_drim <- drim_homologs[which(drim_homologs$`9606` %in% human_SPARK),c(1,2)]
-colnames(homol_overlap_drim) <- c("Mouse", "Human")
-homol_overlap_drim$Description <- gene_symbols[match(homol_overlap_drim$Mouse, gene_symbols$external_gene_name), 3]
+#Using DTU results from running complete dataset from Sharon et al. through pipe with all human SPARK ASD-risk genes (6 results)
 
+#Can also use symbols for gene set input insead of Ensembl IDs
+names_full_drim <- c(rownames(sig_full_drim_PFC), rownames(sig_full_drim_Striatum))
+names_full_drim <- gene_symbols[which(gene_symbols$ensembl_gene_id %in% names_full_drim), "external_gene_name"]
+
+dtu_fulldata_spark_all <- homol_table(genes1 = names_full_drim, 
+                    tax1 = mouse_taxID, 
+                    annots1 = gene_symbols, 
+                    genes2 = human_SPARK_all, 
+                    tax2 = human_taxID, 
+                    symbols1 = TRUE)
 
 ##
 # Comparison Plots ----
