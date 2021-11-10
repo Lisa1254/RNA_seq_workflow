@@ -14,7 +14,6 @@ This collection of scripts and functions describes an RNA-Seq pipeline from fast
 ## TO DO:  
 Script 3: Fix comments for exploratory plots, decide if keeping vidger package for scatterplots, or using source code to make something with ability to modify things  
 Script 4: No option right now to switch from Wald to LRT. Should I keep the required code correction for betaConverge?   
-Script 7: add Venn diagram;  save some outputs  
   
 Functions - verify that functions from specific packages are identified using double colon format (package::function)  
   

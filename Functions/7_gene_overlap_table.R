@@ -34,10 +34,17 @@ draw_overlap_table <- function(..., desc.annots) {
     }
   }
   
+  
+  
   #Keep only genes present in more than 1 set
   overlap.table <- overlap.table[which(rowSums(overlap.table)>1),]
   #Remove sets if no genes have overlap with other sets
   overlap.table <- overlap.table[,which(colSums(overlap.table)>0)]
+
+  #End script if there are no overlapping genes in provided set
+  if ((nrow(overlap.table) == 0) | ncol(overlap.table) == 0) {
+    stop("No genes overlapping in sets provided")
+    }
   
   #Prep heatmap
   hmap <- Heatmap(overlap.table,
