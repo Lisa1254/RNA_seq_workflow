@@ -16,9 +16,15 @@ load("Output/gene_symbols.Rdata")
 
 #homologene is used to map genes to known orthologs in other species for comparison
 library(homologene)
+#ComplexHeatmap and circlize are used for the heatmap table style of visual for showing which genes are represented in multiple comparisons or datasets
+library(ComplexHeatmap)
+library(circlize)
 
-#Function used to 
+#Function used to format and pass data of 2 gene sets to homologene, returning table of homologs present in both sets
 source("Functions/7_homologene_table.R")
+#Function to produce heatmap style table of genes in multiple comparisons or datasets
+source("Functions/7_gene_overlap_table.R")
+
 
 ##
 # Define Key Variables ----
@@ -108,62 +114,43 @@ dtu_fulldata_spark_all <- homol_table(genes1 = names_full_drim,
                     tax2 = human_taxID, 
                     symbols1 = TRUE)
 
+#Saving here the ones I plan to use in the plots below for safety, but consider deleting, and only keeping figures.
+save(deg_spark_all, dtu_ex_dr_human, dtu_fulldata_spark_all, dtu_spark_all, file = paste0(out_dir, "homol_tables.Rdata"))
+
 ##
 # Comparison Plots ----
 ##
 
+#Use provided function for making heatmap style table of overlapping results
+
+#Genes in example data that had homolog in the SPARK ASD-risk sets:
+#Define gene sets of interest using descriptive names
+DGE_Subset_Data <- deg_spark_all[,2]
+
+colnames(deg_spark_all)[1:2] <- c("Mouse", "Human")
+colnames(dtu_ex_dr_human)[1:3] <- c("Mouse", "Zebrafish", "Human")
+colnames(dtu_spark_all)[1:2] <- c("Mouse", "Human")
+colnames(dtu_fulldata_spark_all)[1:2] <- c("Mouse", "Human")
+
+#OR, maybe more useful to have standardized name for each gene set as vector
+DGE_Subset_Data <- deg_spark_all$Human
+DTU_Example_DR <- dtu_ex_dr_human$Human
+DTU_Subset_Data <- dtu_spark_all$Human
+DTU_Full_Data <- dtu_fulldata_spark_all$Human
+
+DGE_Subset_Striatum <- gene_symbols[which(gene_symbols$ensembl_gene_id %in% rownames(sig_asd.control)),"external_gene_name"]
+DGE_Full_Striatum <- gene_symbols[which(gene_symbols$ensembl_gene_id %in% rownames(sig_full_deg_Striatum)),"external_gene_name"]
+SPARK_All <- deg_spark_all$Mouse
+
+draw_overlap_table(DGE_Subset_Striatum, DGE_Full_Striatum, SPARK_All,
+                           desc.annots = gene_symbols)
+draw_overlap_table(DGE_Subset_Data, DTU_Example_DR, DTU_Subset_Data, DTU_Full_Data, human_SPARK_all)
+
+
 # Would like to add Venn diagram style comparison
 
-# This is a paste from my other script of creating a heatmap style of overlap in significant genes in several sets
-# This is more useful with more than 2 comparison sets
-# Consider modifying the code to keep as function or process so that it can accommodate desired number of gene sets for comparison and/or adding another set of relevant genes to the import for comparison
 
-any_asdSet_sym <- annot_sig_dge$external_gene_name
-any_vanSet_sym <- annot_sig_dge_vanco$external_gene_name
 
-top50_risk_drSym <- annot_ens_dr$external_gene_name
-
-gene_sets <- c("any_asdSet_sym", "any_vanSet_sym", "top50_risk_drSym", "resc_genes_update")
-
-all_genes_any_set <- unique(c(any_asdSet_sym, any_vanSet_sym, top50_risk_drSym, resc_genes_update))
-
-SigGene_table_sym <- matrix(nrow=length(all_genes_any_set), ncol=length(gene_sets))
-rownames(SigGene_table_sym) <- all_genes_any_set
-colnames(SigGene_table_sym) <- c("Any ASD-NT", "VANCO", "top 50 Risk", "Prev. Rescue Study")
-
-for (gl in 1:length(gene_sets)) {
-  temp_list <- get(gene_sets[gl])
-  for (gene in 1:nrow(SigGene_table_sym)) {
-    if (rownames(SigGene_table_sym)[gene] %in% temp_list) {
-      SigGene_table_sym[gene,gl] <- 1
-    } else {
-      SigGene_table_sym[gene,gl] <- 0
-    }
-  }
-}
-
-SigGene_table_sym2 <- SigGene_table_sym[which(rowSums(SigGene_table_sym)>1),]
-
-gene_annot <- gene_symbol_all[match(rownames(SigGene_table_sym2),gene_symbol_all$external_gene_name),"description"]
-gene_annot <- strsplit(gene_annot, " \\[")
-gene_annot <- unlist(gene_annot)
-gene_annot <- gene_annot[seq(1,length(gene_annot),2)]
-
-ha_gene <- rowAnnotation(
-  Gene = anno_text(paste(rownames(SigGene_table_sym2), gene_annot, sep = ": "),
-                   rot = 0,
-                   just = 'left',
-                   gp = gpar(fontsize = 8))
-)
-
-hmap <- Heatmap(SigGene_table_sym2,
-                name = 'Genes in Common',
-                col = c('0' = 'white', '1' = 'forestgreen'),
-                rect_gp = gpar(col = 'grey85'),
-                border_gp = gpar(col = "black"),
-                
-                show_row_dend = FALSE)
-draw(hmap + ha_gene)
 
 
 

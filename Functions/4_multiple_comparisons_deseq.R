@@ -39,6 +39,7 @@ results_contrast <- function(des, variable, contrast, pAdjM = "BH") {
 #Function to aid construction of results table with comparison of interest identified
 #Input requires prefix used for naming convention of significant gene dataframes produced from DESeq2 results object
 #Input also requires table of gene symbol annotations to translate from input Ensembl IDs
+#All input significance tables must be listed BEFORE sig.prefix and symbol.annots in order to call the tables and their names for use in the function.
 
 annot_table_full <- function(..., sig.prefix, symbol.annots) {
   lfc.table <- data.frame()
