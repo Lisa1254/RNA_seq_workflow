@@ -54,25 +54,27 @@ draw_ch_TopGenes <- function(dds_obj, dds_results, col.name, col.name2, sig_gene
   group.col <- which(colnames(colData(dds_obj)) == col.name)
   groups <- factor(colData(dds_obj)[,group.col])
   gp_level <- levels(groups)
-  cols5 <- c("darkblue", "magenta", "forestgreen", "chocolate1", "gray48")
-  gp_cols <- cols5[1:length(gp_level)]
+  colsA <- c("darkblue", "magenta", "forestgreen", "chocolate1", "gray48", "cadetblue2", "bisque", "darkmagenta", "gray15")
+  gp_cols <- colsA[1:length(gp_level)]
   names(gp_cols) <- gp_level
   
   if (!missing(col.name2)) {
     group.col2 <- which(colnames(colData(dds_obj)) == col.name2)
     groups2 <- factor(colData(dds_obj)[,group.col2])
     gp_level2 <- levels(groups2)
-    cols5b <- c("cornflowerblue", "coral1", "blueviolet", "darkgoldenrod1", "brown4")
-    gp_cols2 <- cols5b[1:length(gp_level2)]
+    colsB <- c("cornflowerblue", "coral1", "blueviolet", "darkgoldenrod1", "brown4", "springgreen", "slategray1", "seagreen", "navy", "gray26")
+    gp_cols2 <- colsB[1:length(gp_level2)]
     names(gp_cols2) <- gp_level2
     
     col_list <- list(group=gp_cols, group2=gp_cols2)
     ha_trt = HeatmapAnnotation(group = groups, group2=groups2,
-                               col = col_list)
+                               col = col_list,
+                               annotation_label = c(col.name, col.name2))
   } else {
     col_list <- list(group=gp_cols)
     ha_trt = HeatmapAnnotation(group = groups,
-                               col = col_list)
+                               col = col_list,
+                               annotation_label = col.name)
   }
 
   
@@ -82,6 +84,7 @@ draw_ch_TopGenes <- function(dds_obj, dds_results, col.name, col.name2, sig_gene
   
   h <- Heatmap(z.mat, name = "z-score",
           show_row_name = FALSE,
+          show_row_dend = FALSE,
           col = col_fun,
           row_names_gp = gpar(fontsize = 6),
           cluster_columns = TRUE,

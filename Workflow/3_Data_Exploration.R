@@ -29,11 +29,11 @@ library(circlize)
 
 #Source import functions
 #Function to plot samples by principle components from DESeq data set, or to return PC loadings. 
-source("Functions/PCA_from_dds.R")
+source("Functions/3_PCA_from_dds.R")
 #Functions to modify and plot count data according to batch control with Surrogate Variable Analysis
-source("Functions/SV_data_mods.R")
+source("Functions/3_SV_data_mods.R")
 #Draw heatmap of relationships between samples
-source("Functions/samp_dist_heatmap.R")
+source("Functions/3_samp_dist_heatmap.R")
 
 
 ##
@@ -61,6 +61,8 @@ keep <- rowSums(counts(gene_dds) >= min.counts) >= min.samps
 gene_dds <- gene_dds[keep,]
 
 #This data has technical replicates. Before combining the data, preview the distribution of samples to verify that technical replicates are nearly identical
+#Can check variable options with
+colnames(colData(gene_dds))
 #Using "sample" col in samples dataframe for colour (same colour represents technical replicate, and should cluster together)
 #Using "treatment" col in samples dataframe for shape
 PCs_plot_dds(gene_dds, color.var = "sample", shape.var = "treatment")
@@ -189,18 +191,19 @@ save(gene_dds, file=paste0(out_dir, "gene_dds_sva.Rdata"))
 # Exploratory Plots ----
 ##
 
-## Add some additional useful & common plots for exploration
-## Section in progress - still need to streamline code & generalize further where possible
-##Update comments
 
 #Library Size
 #Show variation in library sizes, and impact of normalization
 #Set to display two plots side by side
 par(mfrow = c(1, 2))
 #Counts log-transformed, and not normalized
+#To remove outliers, add "outline=FALSE" argument
 boxplot(counts(gene_dds)+1, xlab="", log = "y", las = 2, col="lightblue", cex.axis = 0.75)
+#Add median line to plot
 abline(h=median(counts(gene_dds)),col="blue")
+#Add title to plot
 title("Boxplots of log counts (unnormalised)", cex.main = 0.75)
+#Second plot for comparison
 #Counts log-transformed, and normalized with DESeq2's RLE method
 boxplot(norm.cts+1, xlab="", log = "y", las = 2, col="darkred", cex.axis = 0.75)
 abline(h=median(norm.cts),col="blue")
@@ -213,23 +216,11 @@ par(mfrow = c(1,1))
 #Heatmap
 
 #Using provided function to visualize sample distances
-sample_dist_heatmap(gene_dds)
+#gp_name variable to paste a group/treatment variable into the rownames
+sample_dist_heatmap(gene_dds, gp_name = "group")
 #Saved as 3_samp_dist
 #Samples from the same donor individual are similar to each other, control samples are similar to each other, but there is variation in the ASD samples. This distribution could indicate that there are few specific differences between the experimental groups, and may also reflect the subsampling from the original data
 
-#Possibly add scatterplot
 
-##
-# Test vidger package ----
-##
-
-#Might delete, in progress to see
-BiocManager::install("vidger")
-library(vidger)
-
-vsScatterPlot(x="CON", y="ASD", data=gene_dds, d.factor="treatment", type="deseq")
-vsScatterMatrix(data=gene_dds, d.factor="group", type="deseq")
-
-#Actually really like this. Super easy, but not a lot of options to modify or colour
 
 ##

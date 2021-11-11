@@ -41,16 +41,22 @@ results_contrast <- function(des, variable, contrast, pAdjM = "BH") {
 #Input also requires table of gene symbol annotations to translate from input Ensembl IDs
 #All input significance tables must be listed BEFORE sig.prefix and symbol.annots in order to call the tables and their names for use in the function.
 
-annot_table_full <- function(..., sig.prefix, symbol.annots) {
+annot_table_full <- function(..., sig.prefix, symbol.annots, lfc_style = c("numeric", "categorical", "none")) {
   lfc.table <- data.frame()
-  dfs <- list(...)[1:(length(as.list(match.call()))-3)]
+  dfs <- list(...)[1:(length(as.list(match.call()))-4)]
   names.in <- as.list(match.call())[-1]
   for (sig in seq(1:length(dfs))) {
     temp_sig <- dfs[[sig]]
     temp_sig <- data.frame(ensembl_gene_id = rownames(temp_sig), comparison = temp_sig[,"log2FoldChange"])
     prefix <- names.in[sig]
     prefix <- gsub(sig.prefix, "", prefix)
-    temp_sig$comparison <- ifelse(temp_sig$comparison < 0, paste0(prefix, "_DOWN"), paste0(prefix, "_UP"))
+    if (lfc_style == "numeric") {
+      temp_sig$comparison <- paste0(prefix, " (", round(temp_sig$comparison, 3), ")")
+    } else if (lfc_style == "categorical") {
+      temp_sig$comparison <- ifelse(temp_sig$comparison < 0, paste0(prefix, " (DOWN)"), paste0(prefix, " (UP)"))
+    } else if (lfc_style == "none") {
+      temp_sig$comparison <- prefix
+    }
     lfc.table <- rbind(lfc.table, temp_sig)
   }
   dup <- duplicated(lfc.table$ensembl_gene_id)

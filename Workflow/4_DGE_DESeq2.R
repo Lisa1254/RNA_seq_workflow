@@ -68,14 +68,14 @@ design(gene_dds)
 design(gene_dds) <- ~ -1 + group
 
 #Apply DESeq2 method for differential gene expression
-#Consider if adding modifiers for test as "Wald" vs. "LRT", or for fitType
 gene_dds <- DESeq(gene_dds)
 
-#Consider removing this line, as it won't be necessary in most workflows.
-#If keeping, describe when a gene might not converge in beta
-#Good explanation at https://support.bioconductor.org/p/65091/
-#Keep only genes which converge in beta
+#If running the differential expression analysis returns the warning that some rows did not converge in beta (trouble converging the general linear model), the rows that did not converge can be filtered out with the following:
 gene_dds <- gene_dds[which(mcols(gene_dds)$betaConv),]
+
+#This may happen when the complex model encounters genes with very low counts. If a lot of rows do not converge, consider re-evaluating if the correct model is being used, or adding additional filtering for low count genes prior to running the differential expression analysis 
+#Good explanation at https://support.bioconductor.org/p/65091/
+
 
 #Check resultsNames to help determine contrast coefficients for results
 resultsNames(gene_dds)
@@ -124,6 +124,9 @@ write.table(annot_asd.control, file=paste0(out_dir, "sig_gene_table_deg.tsv"), q
 #If dataset has multiple comparisons of interest, can use provided functions to facilitate and streamline process
 #For example, if there are two treatment types, and a control group, each pairwise comparison will be of interest
 
+#NOTE: the group variable being supplied to the pairwise comparison functions MUST be the additive variable in the design used for differential expression analysis.
+## If multiple comparisons are desired from a complex design matrix, apply the contrast coefficient method above multiple times instead
+
 #Pairwise comparisons are not especially useful for the grouped factors in this dataset, but will be used here as an example
 #Specify colname of factor of interest using variable argument
 #If only a subset of comparisons are of interest can define manually in same format of Var1.Var2
@@ -160,9 +163,10 @@ for (res in ls()[grepl("res_", ls())]) {
 #To produce annotations table of significant genes in all comparisons, can use included function, which returns subset of gene symbol annotation table, with additional column specifying which comparison and direction of lfc
 #Code makes use of consistent naming conventions attributed above, where tables are named sig_Var1.Var2 and direction of log2FoldChange is specific to Var1
 #Input as many significance tables as desired, followed by specifying the prefix used for significance tables ("sig_"), and the gene symbols complete annotations table
+#Options for lfc_style are c("numeric", "categorical", "none")
 #In this demonstration with provided dataset, the comparisons between individual donor groups is not biologically relevant, and produces many genes considered statistically significant. So I will input 3 of the resulting tables for the example.
 
-test_multi_annotations <- annot_table_full(sig_ASD_9.ASD_3, sig_CON_5.ASD_3, sig_CON_5.ASD_9, sig.prefix = "sig_", symbol.annots = gene_symbols)
+test_multi_annotations <- annot_table_full(sig_ASD_9.ASD_3, sig_CON_5.ASD_3, sig_CON_5.ASD_9, sig.prefix = "sig_", symbol.annots = gene_symbols, lfc_style = "categorical")
 
 #To save as tsv:
 write.table(test_multi_annotations, file=paste0(out_dir, "sig_gene_compare_deg.tsv"), quote=FALSE, sep='\t', col.names = NA)
@@ -178,6 +182,7 @@ save(test_multi_annotations, file = paste0(out_dir, "test_multi_annot.Rdata"))
 
 #Using provided function, can visualize the differences in counts of significant genes
 #Demonstrating with subset of first 10 genes in significance table constructed
+#Note: sample data plots well with default binwidth=1/30; can add binwidth argument if points are too big/small.
 
 count.plot(gene_dds, 
            rownames(sig_asd.control)[1:10], 
@@ -202,6 +207,25 @@ ggplot(sub_res_df, mapping=aes(x=log2FoldChange, y=-log10(padj))) +
   labs(color = "DGE", title = "Volcano Plot of DGE")
 
 #Saved as 4_volcano
+
+#To add annotations to the genes with the largest log2fc
+
+#Define threshold here, or if different thresholds for increased and decreased exprssion are desired, input directly into plot code below
+l2fc_lab_th <- 5
+
+#Add symbols column to results dataframe
+sub_res_df$symbol <- gene_symbols[match(rownames(sub_res_df), gene_symbols$ensembl_gene_id), "external_gene_name"]
+
+#First part of volcano plot is identical to above, but with an additional geom_text line for each up and down expressed genes to allow independent adjustment of position (through hjust and vjust)
+ggplot(sub_res_df, mapping=aes(x=log2FoldChange, y=-log10(padj))) +
+  geom_point(aes(color = 
+                   ifelse((padj>padj_th) | (abs(log2FoldChange)<l2fc_th), 'black',
+                          ifelse(log2FoldChange>l2fc_th, "blue", "red")))) +
+  scale_colour_manual(labels = c("No Change", "Sig Up", "Sig Down"),
+                      values=c('black', 'blue', 'red')) + 
+  labs(color = "DGE", title = "Volcano Plot of DGE") +
+  geom_text(aes(label=ifelse((log2FoldChange>l2fc_lab_th1) & (padj<padj_th), symbol,'')),hjust=0.5,vjust=-0.5) +
+  geom_text(aes(label=ifelse((log2FoldChange<(-l2fc_lab_th1)) & (padj<padj_th), symbol,'')),hjust=0.25,vjust=-0.5)
 
 
 # Heatmap of how gene expression clusters samples

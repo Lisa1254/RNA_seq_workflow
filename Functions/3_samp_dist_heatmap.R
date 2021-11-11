@@ -5,11 +5,17 @@
 
 #Uses libraries ComplexHeatmap and circlize
 
-sample_dist_heatmap <- function(dds, method = "euclidean") {
+sample_dist_heatmap <- function(dds, method = "euclidean", gp_name) {
   vsd <- vst(dds, blind = FALSE)
   sampleDists <- dist(t(assay(vsd)), method = method)
   sampleDistMatrix <- as.matrix( sampleDists )
-  rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), vsd$group, sep = "_")
+  
+  if (!missing(gp_name)) {
+    gp_ind <- which(colnames(colData(dds)) == gp_name)
+    gp_vector <- colData(dds)[,gp_ind]
+    rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), gp_vector, sep = "_")
+  }
+  
   colnames(sampleDistMatrix) <- NULL
   col_fun = circlize::colorRamp2(c(0, max(sampleDistMatrix)), c("blue", "white"))
   Heatmap(sampleDistMatrix,
