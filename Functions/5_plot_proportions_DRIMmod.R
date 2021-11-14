@@ -38,6 +38,7 @@ plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, tx_annots, orde
   if(!missing(sample.sub)){
     count.table <- count.table[,sample.sub]
     group <- group[sample.sub]
+    group <- factor(as.character(group))
   }
   
   ## Calculate observed proportions
@@ -152,7 +153,7 @@ plotProp_mod <- function(drim_obj, gene, sample.sub, group.name, tx_annots, orde
           legend.title = element_text(size = 14), 
           legend.text = element_text(size = 14)) +
     ggtitle(main) +
-    scale_fill_manual(name = "Groups", values = group_colors, 
+    scale_fill_manual(name = group.name, values = group_colors, 
                       breaks = names(group_colors)) +
     scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 10)) +
     xlab("Features") +

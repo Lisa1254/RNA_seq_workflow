@@ -19,6 +19,9 @@ load("Output/gene_symbols.Rdata")
 library(DESeq2)
 #ggplot2 is used for count and volcano plots
 library(ggplot2)
+#If adding gene labels to volcano plot can use ggrepel to prevent labels from overlapping
+install.packages("ggrepel")
+library(ggrepel)
 #circlize, complexHeatmap, dplyr used in heatmap of expression of significant genes
 library(ComplexHeatmap)
 library(circlize)
@@ -168,7 +171,7 @@ for (res in ls()[grepl("res_", ls())]) {
 
 test_multi_annotations <- annot_table_full(sig_ASD_9.ASD_3, sig_CON_5.ASD_3, sig_CON_5.ASD_9, sig.prefix = "sig_", symbol.annots = gene_symbols, lfc_style = "categorical")
 
-#To save as tsv:
+#To save as tsv (not included in repository):
 write.table(test_multi_annotations, file=paste0(out_dir, "sig_gene_compare_deg.tsv"), quote=FALSE, sep='\t', col.names = NA)
 #Will save subset as R file for reference
 test_multi_annotations <- test_multi_annotations[1:10,]
@@ -216,7 +219,8 @@ l2fc_lab_th <- 5
 #Add symbols column to results dataframe
 sub_res_df$symbol <- gene_symbols[match(rownames(sub_res_df), gene_symbols$ensembl_gene_id), "external_gene_name"]
 
-#First part of volcano plot is identical to above, but with an additional geom_text line for each up and down expressed genes to allow independent adjustment of position (through hjust and vjust)
+#First part of volcano plot is identical to above, but with an additional geom_text line for each up and down expressed genes to allow independent adjustments for each side of the plot
+#In this example, the argument "min.segment.length = 0" was added to the decreased expression genes because the points were close together and difficult to distinguish, but left off of the increased expression side where only a single gene met the designated threshold
 ggplot(sub_res_df, mapping=aes(x=log2FoldChange, y=-log10(padj))) +
   geom_point(aes(color = 
                    ifelse((padj>padj_th) | (abs(log2FoldChange)<l2fc_th), 'black',
@@ -224,9 +228,10 @@ ggplot(sub_res_df, mapping=aes(x=log2FoldChange, y=-log10(padj))) +
   scale_colour_manual(labels = c("No Change", "Sig Up", "Sig Down"),
                       values=c('black', 'blue', 'red')) + 
   labs(color = "DGE", title = "Volcano Plot of DGE") +
-  geom_text(aes(label=ifelse((log2FoldChange>l2fc_lab_th1) & (padj<padj_th), symbol,'')),hjust=0.5,vjust=-0.5) +
-  geom_text(aes(label=ifelse((log2FoldChange<(-l2fc_lab_th1)) & (padj<padj_th), symbol,'')),hjust=0.25,vjust=-0.5)
+  geom_text_repel(aes(label=ifelse((log2FoldChange>l2fc_lab_th) & (padj<padj_th), symbol,''))) +
+  geom_text_repel(aes(label=ifelse((log2FoldChange<(-l2fc_lab_th)) & (padj<padj_th), symbol,'')), min.segment.length = 0)
 
+#Saved as 4_volcano_annots
 
 # Heatmap of how gene expression clusters samples
 #Using provided function. Several modifiers are describe in function script, a few examples are shown here

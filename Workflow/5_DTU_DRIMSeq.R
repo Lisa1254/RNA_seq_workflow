@@ -110,6 +110,9 @@ sig_drim_asd.control <- res_drim_asd.control[which(res_drim_asd.control$adj_pval
 rownames(sig_drim_asd.control) <- sig_drim_asd.control$gene_id
 sig_drim_asd.control$gene_id <- NULL
 
+#Also included is a function for making a results table of all genes for a dataset with multiple comparisons similar to the one for DGE in script 4. Inputs are the same, but instead of choice for log2FoldChange is the choice between including p-adj for each comparison
+#See function 5_multiple_comparison_table
+
 #Save fit because it took a long time to make
 save(drimds, file = paste0(out_dir, "drimds.Rdata"))
 #Save test file because it has counts used in precision. Might not need if I use my modified function 
@@ -139,6 +142,7 @@ save(annot_transcript, file = paste0(out_dir, "annot_transcript.Rdata"))
 
 
 #DRIMSeq has a function plotProportions, but it doesn't provide much opportunity to customize, so this repository has modified the source code and provided updated version as a function. See script 5_plot_proportions_DRIMmod for full description of parameters. Some examples are below
+#For drim_obj can imput either drimds after dmFit function, or any result from dmTest, as the information used for transcript counts and precision will be the same.
 
 #Basic plot, similar to DRIMSeq's function:
 plotProp_mod(drim_obj = drimds, 
@@ -146,12 +150,12 @@ plotProp_mod(drim_obj = drimds,
              group.name = "treatment")
 #For comparison, this is the original plot
 #Main difference is value assigned to group mean annotations, which are calculated in the original function based on group input to design matrix, and not grouping variable supplied to plot like with modified function
-plotProportions(drimds, 
+plotProportions(x = drimds, 
                 gene_id = rownames(sig_drim_asd.control)[2],
                 group_variable = "treatment")
 
 #To add annotations to transcripts & if transcript annotation table is provided, can change title to gene symbol instead:
-plotProp_mod(drim_obj = drimds, 
+plotProp_mod(drim_obj = test_asd.control, 
              gene = rownames(sig_drim_asd.control)[2], 
              group.name = "treatment",
              tx_annots = annot_transcript,

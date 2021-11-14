@@ -12,7 +12,6 @@ This collection of scripts and functions describes an RNA-Seq pipeline from fast
 7. Example script for comparing multiple datasets, or multiple attributes in a single dataset
 
 ## TO DO:  
-Script 4: add modification to volcano plot for labeling outliers with gene symbols; also updated heatmp function to not include row dendrogram & use correct variable name for legend, so I should update the figure to reflect that; updating multiple comparison annotation table to allow choice between categorical LFC and numeric, so update that chart as well  
 Functions - verify that functions from specific packages are identified using double colon format (package::function)  
 Functions - switch to internal variables assigned with "=" instead of "<-" as per convention  
 All scripts - read through for consistency and clarity  
