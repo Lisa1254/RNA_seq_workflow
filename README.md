@@ -2,7 +2,7 @@
 
 This collection of scripts and functions describes an RNA-Seq pipeline from fastq files through analysis.
 
-## Intended final product:  
+## Workflow:  
 1. Example script for using Salmon to quantify fastq files  
 2. Script to import and set up data in preparation for analysis  
 3. Script for exploring data and quality control, and formatting data in preparation of downstream analysis  
