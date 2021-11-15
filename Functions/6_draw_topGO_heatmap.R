@@ -7,6 +7,7 @@
 #Can specify title for plot with main=
 
 draw_topGO_heatmap <- function(topGO.table, results.table, annot.table, res.style = c("DESeq2", "DRIMSeq"), gene.min=1, term.min=1, main = "default", gene.font.size=7) {
+  
   ##SET UP DATA
   
   #Define genes of interest
@@ -79,14 +80,14 @@ draw_topGO_heatmap <- function(topGO.table, results.table, annot.table, res.styl
     colnames(dfGeneAnno) <- c('Gene score', 'Log2FC')
     
     #Adjust color ramp depending on whether both directions of change are included, or if only up/down 
-    if (max(dfGeneAnno$Log2FC)<=0) {
-      col_fun_l2fc <- colorRamp2(c(min(dfGeneAnno[,2]), max(dfGeneAnno[,2])), c("darkslategray3", "white"))
-    } else if (min(dfGeneAnno$Log2FC) >= 0) {
-      col_fun_l2fc <- colorRamp2(c(min(dfGeneAnno[,2]), max(dfGeneAnno[,2])), c("white", "coral1"))
+    if (sum(dfGeneAnno$Log2FC < 0) == 0) {
+      col_fun_l2fc <- colorRamp2(c(0, max(dfGeneAnno[,2])), c("white", "darkslategray3"))
+    } else if (sum(dfGeneAnno$Log2FC > 0) == 0) {
+      col_fun_l2fc <- colorRamp2(c(min(dfGeneAnno[,2]), 0), c("coral1", "white"))
     } else {
       col_fun_l2fc <- colorRamp2(c(min(dfGeneAnno[,2]), 0, max(dfGeneAnno[,2])), c("coral1", "white", "darkslategray3"))
     }
-
+    
     
   }
   
@@ -122,15 +123,37 @@ draw_topGO_heatmap <- function(topGO.table, results.table, annot.table, res.styl
   
   #Gene annotations
   if (res.style == "DESeq2") {
-    haGenes <- HeatmapAnnotation(
-      df = dfGeneAnno,
-      annotation_name_side = 'left',
-      col = list(`Gene score` = col_fun_gene, Log2FC = col_fun_l2fc)
-    )
+    if ((sum(dfGeneAnno$Log2FC < 0) != 0) & (sum(dfGeneAnno$Log2FC > 0) != 0)) {
+      haGenes <- HeatmapAnnotation(
+        df = dfGeneAnno,
+        annotation_name_side = 'left',
+        annotation_name_gp = gpar(fontsize = 8, fontface = 'bold'),
+        col = list(`Gene score` = col_fun_gene, Log2FC = col_fun_l2fc),
+        annotation_legend_param = list(
+          `Gene score` = list(title = "Gene Score",
+                              col_fun = col_fun_gene),
+          Log2FC = list(title = "Log2FC",
+                        break_dist = 1,
+                        at = c(round(min(dfGeneAnno[,2]),1), 0, round(max(dfGeneAnno[,2]),1)),
+                        col_fun = col_fun_l2fc)
+        )
+      )
+      
+    } else {
+      haGenes <- HeatmapAnnotation(
+        df = dfGeneAnno,
+        annotation_name_side = 'left',
+        annotation_name_gp = gpar(fontsize = 8, fontface = 'bold'),
+        col = list(`Gene score` = col_fun_gene, Log2FC = col_fun_l2fc)
+      )
+      
+    }
+    
   } else {
     haGenes <- HeatmapAnnotation(
       df = dfGeneAnno,
       annotation_name_side = 'left',
+      annotation_name_gp = gpar(fontsize = 8, fontface = 'bold'),
       col = list(`Gene score` = col_fun_gene)
     )
   }
@@ -145,7 +168,9 @@ draw_topGO_heatmap <- function(topGO.table, results.table, annot.table, res.styl
       gp = gpar(fontsize = 8)),
     annotation_height = unit.c(unit(1, 'cm'), unit(8, 'cm')),
     annotation_name_side = 'bottom',
+    annotation_name_gp = gpar(fontsize = 8, fontface = 'bold'),
     col = list(`Weighted fisher (-log10)` = col_fun_term))
+  
   
   #Main heatmap
   go.gene.table.mat <- t(as.matrix(go.gene.table))
@@ -188,8 +213,6 @@ draw_topGO_heatmap <- function(topGO.table, results.table, annot.table, res.styl
   
   #DRAW
   draw(hmapGSEA + haTerms,
-       heatmap_legend_side = 'right',
-       annotation_legend_side = 'right',
        column_title = plot_title) 
   
   

@@ -26,7 +26,7 @@ Sharon G, Cruz NJ, Kang DW, Gandal MJ et al. Human Gut Microbiota from Autism Sp
   
 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE109827
   
-This data was selected because the samples include multiple runs on the same source RNA data to demonstrate combining technical replicates, and nested design of multiple factors. Original data includes multiple tissue types (Prefrontal cortex & striatum), but only striatum samples are included here.
+This data was selected because the samples include multiple runs on the same source RNA data to demonstrate combining technical replicates, and nested design of multiple factors. Original data includes multiple tissue types (Prefrontal cortex & striatum), but only striatum samples are included here. Any results in this repository are for example of procedure only, and are not intended to replace or supplement the author's published work.
   
 Ensembl ftp site was used for current genome build (GRCm39):  
 Transcriptome:  
