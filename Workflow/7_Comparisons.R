@@ -18,7 +18,8 @@ load("Output/gene_symbols.Rdata")
 library(homologene)
 #ComplexHeatmap and circlize are used for the heatmap table style of visual for showing which genes are represented in multiple comparisons or datasets
 library(ComplexHeatmap)
-#ggVennDiagram can quickly make Venn Diagrams
+#ggVennDiagram can quickly make Venn Diagrams using ggplot2
+library(ggplot2)
 library(ggVennDiagram)
 
 #Function used to format and pass data of 2 gene sets to homologene, returning table of homologs present in both sets
@@ -189,6 +190,7 @@ ggVennDiagram(DTU_venn_data, category.names = DTU_venn_names) +
 #Will demonstrate with showing the overlap of increased and decreased expression of ASD to CON samples in the subset Striatum data vs. the full set of Striatum data
 
 #Define gene sets
+#Can paste the rowname subsetting directly into the creation of the venn data list instead of creating first, but keeping separate here for clarity
 DGE_Down_Sample <- rownames(sig_asd.control[which(sig_asd.control$log2FoldChange<0),])
 DGE_Up_Sample <- rownames(sig_asd.control[which(sig_asd.control$log2FoldChange>0),])
 DGE_Down_Full <- rownames(sig_full_deg_Striatum[which(sig_full_deg_Striatum$log2FoldChange<0),])

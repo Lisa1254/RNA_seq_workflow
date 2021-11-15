@@ -1,6 +1,6 @@
 ## Paste & mod of source code for plotProportions (barplot) in the DRIMSeq package
 
-#Libraries are DRIMSeq for input objects, ggplot for figure, reshape for formatting data
+#Libraries are DRIMSeq for input objects, ggplot2 for figure, reshape for formatting data
 #Required inputs are:
 #   > drim_obj = DRIMSeq Fit object
 #   > gene for plotting

@@ -1,6 +1,6 @@
 # Heatmap for relatedness of samples in most significant genes
 
-#Libraries circlize, complexHeatmap, dplyr
+#Libraries circlize, complexHeatmap, dplyr, DESeq2
 
 #Resulting plot is heatmap of gene expression levels based on either input genes list, or top n genes ordered by increasing padj of results table
 #"ranks" annotation shows relative total count of gene across all samples, such that purple annotations have higher overall expression, and white/gray annotations have lower overall expression (default is to display, but can turn off with rank.annot = FALSE)

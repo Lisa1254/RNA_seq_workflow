@@ -32,7 +32,7 @@ pwise_gps <- function(sample_frame, variable) {
 # see ?p.adjust for more details
 results_contrast <- function(des, variable, contrast, pAdjM = "BH") {
   cons <- strsplit(contrast, split = "\\.")
-  res <- results(des, contrast = c(variable, cons[[1]][1], cons[[1]][2]), pAdjustMethod = pAdjM)
+  res <- DESeq2::results(des, contrast = c(variable, cons[[1]][1], cons[[1]][2]), pAdjustMethod = pAdjM)
   return(res)
 }
 

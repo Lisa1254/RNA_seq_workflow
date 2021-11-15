@@ -1,6 +1,6 @@
 # Function to visualize gene counts of significant genes from differential gene expression analysis
 
-
+#Required libraries are DESeq2, ggplot2
 
 #Uses ggplot to show count differences of specified genes between groups of interest
 #Inputs are dds object for count data and sample information, genes of interest for plotting, annotation frame of gene ensembl id to symbol mapping (as made with biomaRt), and factor variable from sample information for colour of points

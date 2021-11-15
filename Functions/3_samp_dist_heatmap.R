@@ -3,10 +3,10 @@
 # Method must be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski", as per dist() function. Default is "euclidean"
 #Expected colData column within dds object is "group", which describes important experimental grouping for identifying relevant sample clustering
 
-#Uses libraries ComplexHeatmap and circlize
+#Uses libraries DESeq2, ComplexHeatmap and circlize
 
 sample_dist_heatmap <- function(dds, method = "euclidean", gp_name) {
-  vsd <- vst(dds, blind = FALSE)
+  vsd <- DESeq2::vst(dds, blind = FALSE)
   sampleDists <- dist(t(assay(vsd)), method = method)
   sampleDistMatrix <- as.matrix( sampleDists )
   

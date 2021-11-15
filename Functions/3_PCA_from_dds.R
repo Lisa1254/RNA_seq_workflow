@@ -1,13 +1,16 @@
 ## Function to make PCA plot from DESeq Data Set object
+
+#Libraries required: DESeq2 & ggplot2
+
 #Option to use only a subset of genes for PCA
 #Option to return PCA loadings instead of plotting
 #Default to plot PC1 & PC2
 
 PCs_plot_dds <- function(dds, color.var, shape.var, gene_subset, PCX=1, PCY=2, main = "PCA from VST data", returnLoadings = FALSE) {
   if (missing(gene_subset)) {
-    vst_pc <- vst(dds)
+    vst_pc <- DESeq2::vst(dds)
   } else {
-    vst_pc <- vst(dds)[gene_subset,]
+    vst_pc <- DESeq2::vst(dds)[gene_subset,]
   }
   pca <- prcomp(t(assay(vst_pc)))
   pca_mat <- as.data.frame(pca$x)

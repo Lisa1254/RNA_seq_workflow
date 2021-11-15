@@ -12,8 +12,6 @@ This collection of scripts and functions describes an RNA-Seq pipeline from fast
 7. Example script for comparing multiple datasets, or multiple attributes in a single dataset
 
 ## TO DO:  
-Functions - verify that functions from specific packages are identified using double colon format (package::function)  
-Functions - switch to internal variables assigned with "=" instead of "<-" as per convention  
 All scripts - read through for consistency and clarity  
   
 
