@@ -2,13 +2,7 @@
 ## Comparisons of Multiple Datasets ----
 ##
 
-#Data required for this script:
-##   > significant genes determined in scripts 4 & 5
-load("Output/sig_deg_asd_control.Rdata")
-load("Output/sig_drim_asd_control.Rdata")
-##   > other gene lists for comparison (can use SPARK ASD-risk genes and provided example gene lists as specified below)
-##   > Gene to symbol & description mappings (Script 2)
-load("Output/gene_symbols.Rdata")
+#This script provides an example for how to approach comparisons between different contrasts in a single dataset, and results between different datasets
 
 ##
 # Libraries & Functions----
@@ -26,6 +20,15 @@ library(ggVennDiagram)
 source("Functions/7_homologene_table.R")
 #Function to produce heatmap style table of genes in multiple comparisons or datasets
 source("Functions/7_gene_overlap_table.R")
+
+#Data required for this script:
+##   > significant genes determined in scripts 4 & 5
+load("Output/sig_deg_asd_control.Rdata")
+load("Output/sig_drim_asd_control.Rdata")
+##   > other gene lists for comparison (can use SPARK ASD-risk genes and provided example gene lists as specified below)
+##   > Gene to symbol & description mappings (Script 2)
+load("Output/gene_symbols.Rdata")
+
 
 
 ##

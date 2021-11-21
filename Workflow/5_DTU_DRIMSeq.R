@@ -2,10 +2,7 @@
 ## Differential Transcript Usage Analysis with DRIMSeq ----
 ##
 
-#Data required for this script:
-##   > transcript-level counts & sample information in DRIMSeq format (output of script 3_Data_Exploration)
-load("Output/tx_ct_formatted.Rdata")
-
+#This script demonstrates the use of DRIMSeq for differential transcript usage analysis, and annotation tables and visualizations of results
 
 ##
 # Libraries & Functions----
@@ -20,8 +17,15 @@ library(ggplot2)
 library(reshape2)
 
 #Source custom functions
+
 #This functions modifies the source code for DRIMSeq's plotProportions function to allow for user input to specific attributes
 source("Functions/5_plot_proportions_DRIMmod.R")
+#If creating a reference table of all results with multiple comparisons (not done in this example script), can use following:
+source("Functions/5_multiple_comparison_table_dtu.R")
+
+#Data required for this script:
+##   > transcript-level counts & sample information in DRIMSeq format (output of script 3_Data_Exploration)
+load("Output/tx_ct_formatted.Rdata")
 
 
 ##
@@ -142,7 +146,7 @@ save(annot_transcript, file = paste0(out_dir, "annot_transcript.Rdata"))
 
 
 #DRIMSeq has a function plotProportions, but it doesn't provide much opportunity to customize, so this repository has modified the source code and provided updated version as a function. See script 5_plot_proportions_DRIMmod for full description of parameters. Some examples are below
-#For drim_obj can imput either drimds after dmFit function, or any result from dmTest, as the information used for transcript counts and precision will be the same.
+#For drim_obj can input either drimds after dmFit function, or any result from dmTest, as the information used for transcript counts and precision will be the same.
 
 #Basic plot, similar to DRIMSeq's function:
 plotProp_mod(drim_obj = drimds, 

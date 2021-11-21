@@ -2,14 +2,7 @@
 ## Gene Ontology Analysis with topGO ----
 ##
 
-#Data required for this script:
-##   > Significant genes for exploration from DGE (Script 4) & DTU (Script 5) analyses. Just a list of gene names is sufficient for analysis, but full table of significance statistics is used for annotations in plots.
-load("Output/sig_deg_asd_control.Rdata")
-load("Output/sig_drim_asd_control.Rdata")
-##   > Gene to GO mappings (Script 2)
-load("Output/go_annotations.Rdata")
-##   > Gene symbol mappings used in plots (Script 2)
-load("Output/gene_symbols.Rdata")
+#This script demonstrates the use of topGO for gene ontology enrichment analysis, along with results visualization
 
 
 ##
@@ -27,6 +20,16 @@ library(circlize)
 source("Functions/6_topGO_results_wrapper.R")
 #Function to plot topGO results as heatmap with genes & GO terms
 source("Functions/6_draw_topGO_heatmap.R")
+
+#Data required for this script:
+##   > Significant genes for exploration from DGE (Script 4) & DTU (Script 5) analyses. Just a list of gene names is sufficient for analysis, but full table of significance statistics is used for annotations in plots.
+load("Output/sig_deg_asd_control.Rdata")
+load("Output/sig_drim_asd_control.Rdata")
+##   > Gene to GO mappings (Script 2)
+load("Output/go_annotations.Rdata")
+##   > Gene symbol mappings used in plots (Script 2)
+load("Output/gene_symbols.Rdata")
+
 
 ##
 # Define Key Variables ----

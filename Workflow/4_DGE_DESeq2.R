@@ -2,14 +2,7 @@
 ## Differential Gene Expression Analysis with DESeq2 ----
 ##
 
-#Data required for this script:
-##   > DESeq data set object (output of script 3_Data_Exploration)
-### If using output after collapsing technical replicates:
-load("Output/gene_dds.Rdata")
-### If using output with surrogate variable information from batch correction:
-load("Output/gene_dds_sva.Rdata")
-##   > annotation table with gene symbols and descriptions to identify results (output of script 2_Data_Import)
-load("Output/gene_symbols.Rdata")
+#This script demonstrates the use of DESeq2 for differential gene expression analysis, and annotation tables and visualizations of results
 
 ##
 # Libraries & Functions----
@@ -34,6 +27,15 @@ source("Functions/4_multiple_comparisons_deseq.R")
 source("Functions/4_dge_count_plot.R")
 #Function to make heatmap of gene expression of significant genes
 source("Functions/4_heatmap_dds_siggenes.R")
+
+#Data required for this script:
+##   > DESeq data set object (output of script 3_Data_Exploration)
+### If using output after collapsing technical replicates:
+load("Output/gene_dds.Rdata")
+### If using output with surrogate variable information from batch correction:
+load("Output/gene_dds_sva.Rdata")
+##   > annotation table with gene symbols and descriptions to identify results (output of script 2_Data_Import)
+load("Output/gene_symbols.Rdata")
 
 ##
 # Define Key Variables ----

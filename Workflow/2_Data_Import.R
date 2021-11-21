@@ -2,14 +2,10 @@
 ## Data Import ----
 ##
 
-#Data required for this script:
-##   > salmon quantifications at transcript level identification
-##   > absolute path to quantifications
-##   > dataframe of Transcript to Gene mappings OR GTF file corresponding to organism
-##   > dataframe of sample information, including groups of interest such as batch and condition
+#This script demonstrates importing .sf Salmon files for analysis, formatting sample information tables, and constructing reference tables of gene symbols and GO annotations
 
 ##
-# Libraries & Functions----
+# Required Data, Libraries & Functions----
 ##
 
 #tximport is used to organize .sf  files from Salmon into count information
@@ -24,6 +20,13 @@ library(biomaRt)
 source("Functions/tximport_salmon.R")
 #GenomicFeatures wrapper function for constructing table of transcript to gene mappings from gtf
 source("Functions/gtf_2_txmap.R")
+
+
+#Data required for this script:
+##   > salmon quantifications at transcript level identification
+##   > absolute path to quantifications
+##   > dataframe of Transcript to Gene mappings OR GTF file corresponding to organism
+##   > dataframe of sample information, including groups of interest such as batch and condition
 
 ##
 # Define Key Variables ----
