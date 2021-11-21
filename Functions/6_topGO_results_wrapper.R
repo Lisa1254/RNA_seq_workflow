@@ -61,8 +61,16 @@ GO_2_results <- function(sig_genes, bg.genes, ont, go_annots, thresh_p=0.001, al
       colnames(gene_col) <- "genes"
     }
     keep_res_temp <- cbind(keep_res_temp, gene_col)
+    new_gos <- nrow(keep_res_temp)
+    cat("For ONT=", ONT, ", ", new_gos, " terms added\n")
     keep_res <- rbind(keep_res, keep_res_temp)
   }
+  #End script if there are GO terms found in provided set
+  if (nrow(keep_res) == 0) {
+    stop("No enriched GO terms found in provided set")
+  }
+  
+  #Correct cut-off terms
   for (row in 1:length(keep_res$Term)) {
     if (grepl("\\.\\.\\.", keep_res$Term[row])) {
       full.term <- go_annots[which(go_annots$go_id == keep_res[row,2]),"name_1006"]
