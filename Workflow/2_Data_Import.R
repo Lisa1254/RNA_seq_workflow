@@ -17,9 +17,9 @@ library(biomaRt)
 
 #Source import functions
 #Tximport wrapper functions for importing salmon quantifications at gene-level and transcript-level
-source("Functions/tximport_salmon.R")
+source("Functions/2_tximport_salmon.R")
 #GenomicFeatures wrapper function for constructing table of transcript to gene mappings from gtf
-source("Functions/gtf_2_txmap.R")
+source("Functions/2_gtf_2_txmap.R")
 
 
 #Data required for this script:

@@ -32,8 +32,8 @@ draw_topGO_heatmap <- function(topGO.table, results.table, annot.table, res.styl
   #Assign descriptive colnames
   colnames(go.gene.table) <- topGO.table[,"Term"]
   #Ensure no empty rows/cols, or if different min set, that each meets threshold
-  go.gene.table <- go.gene.table[,apply(go.gene.table, 2, sum)>=term.min]
   go.gene.table <- go.gene.table[apply(go.gene.table, 1, sum)>=gene.min,]
+  go.gene.table <- go.gene.table[,apply(go.gene.table, 2, sum)>=term.min]
   
   #Make sure results table is ordered same as mapping dataframe
   topTableAligned <- as.data.frame(results.table[which(rownames(results.table) %in% rownames(go.gene.table)),])
